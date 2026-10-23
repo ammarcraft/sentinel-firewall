@@ -1,0 +1,26 @@
+# ============================================================================== #
+# SENTINEL FIREWALL - TRAFFIC INSPECTION & POLICY AUDIT LOG                       #
+# Generated At: 2026-10-23T18:37:03.761Z                                      #
+# Target Path: C:\Users\ammar\OneDrive\Desktop\Firewall\Reports              #
+# Operational Status: NORMAL OPERATIONAL BASELINE               #
+# Telemetry Summary: Total=9 | Allowed=8 (88.9%) | Dropped=1 (11.1%)   #
+# ============================================================================== #
+
+--- [SECTION 1: ACTIVE FIREWALL RULES] ---
+Rule_ID,Target_IP,Port,Protocol,Action,Description,Hits,Bytes,Status
+"FW-101","192.168.1.105","ALL","TCP/UDP","DROP","Quarantine: High-Frequency SYN Flood & Port Scan","14892","18.4 MB","ACTIVE"
+"FW-102","0.0.0.0/0","443","TCP","ALLOW","HTTPS public web gateway traffic","1280419","1.42 GB","ACTIVE"
+"FW-103","0.0.0.0/0","80","TCP","ALLOW","HTTP inbound redirect to HTTPS","491208","312 MB","ACTIVE"
+"FW-104","45.33.32.156","22","TCP","DROP","Block remote automated SSH brute-force scanning","38912","4.2 MB","ACTIVE"
+
+--- [SECTION 2: LIVE PACKET INSPECTION LOGS] ---
+Timestamp,Packet_ID,Protocol,Source_IP,Source_Port,Dest_IP,Dest_Port,Length_Bytes,TTL,Action,Rule_ID
+"14:20:02.114","PKT-1001","TCP [ACK]","142.250.190.46","443","192.168.1.20","51240","1420","54","ALLOW","FW-102"
+"14:20:04.228","PKT-1002","TCP [SYN]","45.33.32.156","58122","192.168.1.20","22","64","48","DROP","FW-104"
+"14:20:06.381","PKT-1003","UDP [DNS]","1.1.1.1","53","192.168.1.45","49301","128","58","ALLOW","DEFAULT"
+"14:20:08.512","PKT-1004","TCP [ACK]","172.217.16.206","443","192.168.1.32","53810","1380","56","ALLOW","FW-102"
+"00:06:55.594","PKT-1792780615594-424","TCP [ACK]","172.217.16.206","11312","192.168.1.17","8080","1076","49","ALLOW","DEFAULT"
+"00:06:57.592","PKT-1792780617592-368","TCP [ACK]","20.112.52.29","26291","192.168.1.70","8080","549","56","ALLOW","DEFAULT"
+"00:06:59.594","PKT-1792780619594-756","TCP [ACK]","20.112.52.29","16587","192.168.1.56","8080","506","49","ALLOW","DEFAULT"
+"00:07:01.593","PKT-1792780621593-448","TCP [ACK]","20.112.52.29","9900","192.168.1.62","8080","1359","58","ALLOW","DEFAULT"
+"00:07:03.603","PKT-1792780623603-541","TCP [ACK]","185.199.108.153","42017","192.168.1.10","80","1253","61","ALLOW","FW-103"

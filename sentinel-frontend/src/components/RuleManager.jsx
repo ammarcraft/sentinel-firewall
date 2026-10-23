@@ -1,0 +1,380 @@
+import React from 'react';
+import { ShieldCheck, Plus, Search, Trash2 } from 'lucide-react';
+import { QUICK_PORT_PRESETS } from '../constants/initialData';
+
+export default function RuleManager({
+  isDarkMode,
+  rules,
+  filteredRules,
+  inputIp,
+  setInputIp,
+  inputPort,
+  setInputPort,
+  inputProtocol,
+  setInputProtocol,
+  inputAction,
+  setInputAction,
+  inputDesc,
+  setInputDesc,
+  ruleSearch,
+  setRuleSearch,
+  ruleActionFilter,
+  setRuleActionFilter,
+  onAddRule,
+  onToggleRule,
+  onDeleteRule,
+  onQuickPort
+}) {
+  const allowCount = rules.filter((r) => r.action === 'ALLOW').length;
+  const dropCount = rules.filter((r) => r.action === 'DROP').length;
+
+  return (
+    <section
+      className={`w-full rounded-xl border flex flex-col shadow-sm overflow-hidden transition-colors ${
+        isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
+      }`}
+    >
+      {/* Header */}
+      <div
+        className={`p-5 border-b flex flex-wrap items-center justify-between gap-4 ${
+          isDarkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-gray-50 border-gray-200'
+        }`}
+      >
+        <div>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <h3 className="font-bold text-base">Firewall Policy & Filtering Rules Engine</h3>
+          </div>
+          <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            Deterministic packet filtering configuration applied to Linux Netfilter / iptables chains.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 text-xs">
+          <span
+            className={`px-2.5 py-1 rounded font-medium border ${
+              isDarkMode
+                ? 'bg-green-950/40 text-green-400 border-green-800/60'
+                : 'bg-green-50 text-green-700 border-green-200'
+            }`}
+          >
+            {allowCount} ALLOW Rules
+          </span>
+          <span
+            className={`px-2.5 py-1 rounded font-medium border ${
+              isDarkMode
+                ? 'bg-red-950/40 text-red-400 border-red-800/60'
+                : 'bg-red-50 text-red-700 border-red-200'
+            }`}
+          >
+            {dropCount} DROP Rules
+          </span>
+        </div>
+      </div>
+
+      {/* Full-Width Rule Input Form */}
+      <form
+        onSubmit={onAddRule}
+        className={`p-5 border-b space-y-4 ${
+          isDarkMode ? 'border-slate-700 bg-slate-850' : 'border-gray-200 bg-slate-50/60'
+        }`}
+      >
+        <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+          <Plus className="w-4 h-4 text-blue-600" />
+          Deploy New Filtering Rule
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+          <div>
+            <label className="block font-medium mb-1 text-slate-700 dark:text-slate-300">
+              Target IP / Subnet CIDR
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. 192.168.1.105 or 10.0.0.0/24"
+              value={inputIp}
+              onChange={(e) => setInputIp(e.target.value)}
+              className={`w-full rounded-md px-3 py-2 text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                isDarkMode
+                  ? 'bg-slate-900 border-slate-700 text-slate-100'
+                  : 'bg-white border-gray-300 text-slate-900'
+              }`}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium mb-1 text-slate-700 dark:text-slate-300">Target Port</label>
+            <input
+              type="text"
+              placeholder="e.g. 80, 443, 22, ALL"
+              value={inputPort}
+              onChange={(e) => setInputPort(e.target.value)}
+              className={`w-full rounded-md px-3 py-2 text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                isDarkMode
+                  ? 'bg-slate-900 border-slate-700 text-slate-100'
+                  : 'bg-white border-gray-300 text-slate-900'
+              }`}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium mb-1 text-slate-700 dark:text-slate-300">Protocol</label>
+            <select
+              value={inputProtocol}
+              onChange={(e) => setInputProtocol(e.target.value)}
+              className={`w-full rounded-md px-2.5 py-2 text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                isDarkMode
+                  ? 'bg-slate-900 border-slate-700 text-slate-100'
+                  : 'bg-white border-gray-300 text-slate-900'
+              }`}
+            >
+              <option value="TCP">TCP</option>
+              <option value="UDP">UDP</option>
+              <option value="ICMP">ICMP</option>
+              <option value="ALL">ALL / ANY</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-medium mb-1 text-slate-700 dark:text-slate-300">Action Policy</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setInputAction('ALLOW')}
+                className={`py-1.5 rounded-md text-xs font-semibold border transition cursor-pointer ${
+                  inputAction === 'ALLOW'
+                    ? 'bg-green-600 text-white border-green-600'
+                    : isDarkMode
+                      ? 'bg-slate-900 text-slate-400 border-slate-700'
+                      : 'bg-white text-slate-600 border-gray-300'
+                }`}
+              >
+                ALLOW
+              </button>
+              <button
+                type="button"
+                onClick={() => setInputAction('DROP')}
+                className={`py-1.5 rounded-md text-xs font-semibold border transition cursor-pointer ${
+                  inputAction === 'DROP'
+                    ? 'bg-red-600 text-white border-red-600'
+                    : isDarkMode
+                      ? 'bg-slate-900 text-slate-400 border-slate-700'
+                      : 'bg-white text-slate-600 border-gray-300'
+                }`}
+              >
+                DROP
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-medium mb-1 text-slate-700 dark:text-slate-300">
+              Policy Label / Description
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Block malicious port scanner"
+              value={inputDesc}
+              onChange={(e) => setInputDesc(e.target.value)}
+              className={`w-full rounded-md px-3 py-2 text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                isDarkMode
+                  ? 'bg-slate-900 border-slate-700 text-slate-100'
+                  : 'bg-white border-gray-300 text-slate-900'
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Form Footer with Presets & Submit */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span className="font-medium">Quick Presets:</span>
+            {QUICK_PORT_PRESETS.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => onQuickPort(p.port, p.proto)}
+                className={`px-2.5 py-1 rounded border transition cursor-pointer ${
+                  isDarkMode
+                    ? 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300'
+                    : 'bg-gray-100 border-gray-200 hover:bg-gray-200 text-slate-700'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-md transition cursor-pointer flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Commit Rule</span>
+          </button>
+        </div>
+      </form>
+
+      {/* Filter and Search Bar */}
+      <div
+        className={`p-4 border-b flex flex-wrap items-center justify-between gap-3 text-xs ${
+          isDarkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-gray-50 border-gray-200'
+        }`}
+      >
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <input
+            type="text"
+            placeholder="Search active rules by IP, port, or description..."
+            value={ruleSearch}
+            onChange={(e) => setRuleSearch(e.target.value)}
+            className={`w-full rounded-md pl-9 pr-3 py-1.5 text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+              isDarkMode
+                ? 'bg-slate-900 border-slate-700 text-slate-100'
+                : 'bg-white border-gray-300 text-slate-900'
+            }`}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-slate-500 font-medium">Filter Action:</span>
+          <button
+            onClick={() => setRuleActionFilter('ALL')}
+            className={`px-3 py-1 rounded text-xs font-medium transition cursor-pointer ${
+              ruleActionFilter === 'ALL'
+                ? 'bg-blue-600 text-white'
+                : isDarkMode
+                  ? 'text-slate-400 hover:text-white'
+                  : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            All ({rules.length})
+          </button>
+          <button
+            onClick={() => setRuleActionFilter('ALLOW')}
+            className={`px-3 py-1 rounded text-xs font-medium transition cursor-pointer ${
+              ruleActionFilter === 'ALLOW'
+                ? 'bg-green-600 text-white'
+                : isDarkMode
+                  ? 'text-slate-400 hover:text-white'
+                  : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Allow ({allowCount})
+          </button>
+          <button
+            onClick={() => setRuleActionFilter('DROP')}
+            className={`px-3 py-1 rounded text-xs font-medium transition cursor-pointer ${
+              ruleActionFilter === 'DROP'
+                ? 'bg-red-600 text-white'
+                : isDarkMode
+                  ? 'text-slate-400 hover:text-white'
+                  : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Drop ({dropCount})
+          </button>
+        </div>
+      </div>
+
+      {/* Full-Width Rules Table (Zero Horizontal Scrolling) */}
+      <div className="w-full overflow-x-auto">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr
+              className={`border-b text-[11px] font-semibold uppercase text-slate-500 ${
+                isDarkMode ? 'border-slate-700 bg-slate-900/60' : 'border-gray-200 bg-gray-50'
+              }`}
+            >
+              <th className="py-3 px-4">Rule ID</th>
+              <th className="py-3 px-4">Action</th>
+              <th className="py-3 px-4">Target Prefix</th>
+              <th className="py-3 px-4">Port</th>
+              <th className="py-3 px-4">Protocol</th>
+              <th className="py-3 px-4">Description</th>
+              <th className="py-3 px-4">Hit Count</th>
+              <th className="py-3 px-4">Volume</th>
+              <th className="py-3 px-4">State</th>
+              <th className="py-3 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className={`divide-y ${isDarkMode ? 'divide-slate-700/80' : 'divide-gray-200'}`}>
+            {filteredRules.length === 0 ? (
+              <tr>
+                <td colSpan="10" className="py-12 text-center text-slate-500 text-sm">
+                  No rules found matching "{ruleSearch}".
+                </td>
+              </tr>
+            ) : (
+              filteredRules.map((rule) => {
+                const isAllow = rule.action === 'ALLOW';
+                return (
+                  <tr
+                    key={rule.id}
+                    className={`transition ${isDarkMode ? 'hover:bg-slate-750' : 'hover:bg-gray-50'}`}
+                  >
+                    <td className="py-3 px-4 font-semibold text-slate-500 font-mono">{rule.id}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold border ${
+                          isAllow
+                            ? isDarkMode
+                              ? 'bg-green-950/40 text-green-400 border-green-800/60'
+                              : 'bg-green-50 text-green-700 border-green-200'
+                            : isDarkMode
+                              ? 'bg-red-950/40 text-red-400 border-red-800/60'
+                              : 'bg-red-50 text-red-700 border-red-200'
+                        }`}
+                      >
+                        {rule.action}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-medium font-mono text-slate-900 dark:text-slate-100">
+                      {rule.ip}
+                    </td>
+                    <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-300">{rule.port}</td>
+                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400">{rule.protocol}</td>
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300 max-w-xs truncate">
+                      {rule.description}
+                    </td>
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300 font-mono">
+                      {rule.hits.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 font-mono">{rule.bytes}</td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => onToggleRule(rule.id)}
+                        className={`text-[11px] px-2.5 py-1 rounded border transition cursor-pointer font-medium ${
+                          rule.status === 'ACTIVE'
+                            ? isDarkMode
+                              ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-750'
+                              : 'bg-gray-100 text-slate-700 border-gray-200 hover:bg-gray-200'
+                            : isDarkMode
+                              ? 'bg-slate-900 text-slate-500 border-slate-800'
+                              : 'bg-gray-50 text-slate-400 border-gray-200'
+                        }`}
+                      >
+                        {rule.status}
+                      </button>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        onClick={() => onDeleteRule(rule.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer rounded hover:bg-red-50 dark:hover:bg-red-950/40"
+                        title="Delete Rule"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
