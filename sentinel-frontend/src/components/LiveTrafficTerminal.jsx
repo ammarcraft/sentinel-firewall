@@ -1,10 +1,11 @@
 import React from 'react';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Trash2, Radio } from 'lucide-react';
 
 export default function LiveTrafficTerminal({
   isDarkMode,
-  filteredLogs,
-  totalPkts,
+  logs = [],
+  filteredLogs = [],
+  totalPkts = 0,
   isTerminalPaused,
   setIsTerminalPaused,
   autoScroll,
@@ -14,7 +15,8 @@ export default function LiveTrafficTerminal({
   logGrep,
   setLogGrep,
   isAttackActive,
-  terminalBoxRef
+  terminalBoxRef,
+  onClearLogs
 }) {
   return (
     <section
@@ -29,14 +31,36 @@ export default function LiveTrafficTerminal({
         }`}
       >
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-green-600" />
+          <div
+            className={`w-2.5 h-2.5 rounded-full ${
+              isTerminalPaused ? 'bg-amber-500' : 'bg-green-600 animate-pulse'
+            }`}
+          />
           <h3 className="font-semibold text-sm">Live Traffic Terminal</h3>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 mr-2">
+          <span className="text-xs text-slate-500 mr-1">
             Packets: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{totalPkts}</strong>
           </span>
+
+          {onClearLogs && (
+            <button
+              onClick={onClearLogs}
+              disabled={logs.length === 0}
+              className={`p-1.5 rounded text-xs transition cursor-pointer border ${
+                logs.length === 0
+                  ? 'opacity-40 cursor-not-allowed text-slate-400 border-transparent'
+                  : isDarkMode
+                    ? 'bg-slate-900 text-slate-300 border-slate-700 hover:text-red-400 hover:border-red-900'
+                    : 'bg-white text-slate-600 border-gray-300 hover:text-red-600 hover:border-red-200'
+              }`}
+              title="Clear Terminal Feed"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+
           <button
             onClick={() => setIsTerminalPaused(!isTerminalPaused)}
             className={`p-1.5 rounded text-xs transition cursor-pointer border ${
@@ -50,6 +74,7 @@ export default function LiveTrafficTerminal({
           >
             {isTerminalPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
           </button>
+
           <button
             onClick={() => setAutoScroll(!autoScroll)}
             className={`p-1.5 rounded text-xs transition cursor-pointer border ${
@@ -139,10 +164,20 @@ export default function LiveTrafficTerminal({
           className="bg-slate-950 text-slate-200 border border-slate-800 rounded-lg p-3.5 font-mono text-xs flex-1 overflow-y-auto custom-scrollbar space-y-1 select-text min-h-[460px] max-h-[580px]"
         >
           {filteredLogs.length === 0 ? (
-            <div className="text-center py-20 text-slate-500">
-              {isTerminalPaused
-                ? '[FEED PAUSED - CLICK PLAY TO RESUME]'
-                : '[AWAITING NETWORK FRAMES (2000ms CADENCE)...]'}
+            <div className="h-full flex flex-col items-center justify-center py-24 text-slate-500 space-y-2">
+              <Radio className="w-5 h-5 text-blue-500 animate-pulse" />
+              <div className="font-semibold text-xs tracking-wider uppercase text-slate-400">
+                {isTerminalPaused
+                  ? '[FEED PAUSED - CLICK PLAY TO RESUME]'
+                  : logs.length === 0
+                    ? '[NO TRAFFIC CAPTURED - AWAITING NETWORK FRAMES]'
+                    : `[NO FRAMES MATCHING FILTER: ${logFilter} ${logGrep ? `("${logGrep}")` : ''}]`}
+              </div>
+              <p className="text-[11px] text-slate-600 max-w-sm text-center">
+                {logs.length === 0
+                  ? 'Active socket listener attached to interface eth0. Real-time packet telemetry will stream here as incoming frames arrive.'
+                  : 'Adjust the filter tabs or search expression to inspect captured packets.'}
+              </p>
             </div>
           ) : (
             filteredLogs.map((pkt) => {
@@ -150,7 +185,7 @@ export default function LiveTrafficTerminal({
               return (
                 <div
                   key={pkt.id}
-                  className={`flex flex-wrap items-baseline gap-x-2 py-0.5 px-1.5 rounded ${
+                  className={`flex flex-wrap items-baseline gap-x-2 py-0.5 px-1.5 rounded transition ${
                     isDrop ? 'bg-red-950/25 hover:bg-red-950/40' : 'bg-green-950/20 hover:bg-green-950/35'
                   }`}
                 >
@@ -196,7 +231,7 @@ export default function LiveTrafficTerminal({
           <span className="w-2 h-2 rounded-full bg-green-600" />
           <span>Interface eth0 (Local Promiscuous)</span>
         </div>
-        <div>Interval: {isAttackActive ? '900ms (Active Attack)' : '2000ms (Normal)'}</div>
+        <div>Interval: {isAttackActive ? '700ms (Active Attack)' : '1800ms (Normal)'}</div>
       </div>
     </section>
   );

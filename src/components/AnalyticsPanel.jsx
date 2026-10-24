@@ -1,354 +1,309 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Activity, 
-  ShieldCheck, 
-  ShieldAlert, 
-  Cpu, 
-  Wifi
-} from 'lucide-react';
+import React from 'react';
+import { Activity, Wifi, Cpu } from 'lucide-react';
 
-export default function AnalyticsPanel({ rules, isAttackActive }) {
-  const [throughput, setThroughput] = useState(2.34);
-  const [packetRate, setPacketRate] = useState(148200);
-  const [radarAngle, setRadarAngle] = useState(0);
+export default function AnalyticsPanel({
+  isDarkMode,
+  logs = [],
+  throughput = 2.38,
+  packetRate = 148200,
+  allowPkts = 0,
+  dropPkts = 0,
+  sparkPoints = [],
+  isAttackActive = false
+}) {
+  // Compute Layer 4 Port Distribution dynamically from actual captured packets
+  const totalCaptured = logs.length;
+  const p443Count = logs.filter((l) => l.dstPort === 443 || l.srcPort === 443).length;
+  const p80Count = logs.filter((l) => l.dstPort === 80 || l.srcPort === 80).length;
+  const p22Count = logs.filter((l) => l.dstPort === 22 || l.srcPort === 22).length;
 
-  // Sparkline data points (Allowed vs Blocked)
-  const [sparkPoints, setSparkPoints] = useState([
-    { allow: 80, drop: 5 },
-    { allow: 85, drop: 4 },
-    { allow: 78, drop: 6 },
-    { allow: 92, drop: 3 },
-    { allow: 88, drop: 7 },
-    { allow: 95, drop: 4 },
-    { allow: 82, drop: 5 },
-    { allow: 90, drop: 8 },
-    { allow: 86, drop: 4 },
-    { allow: 94, drop: 5 }
-  ]);
+  const p443Pct = totalCaptured > 0 ? Math.round((p443Count / totalCaptured) * 100) : 52;
+  const p80Pct = totalCaptured > 0 ? Math.round((p80Count / totalCaptured) * 100) : 28;
+  const p22Pct = totalCaptured > 0 ? Math.round((p22Count / totalCaptured) * 100) : 14;
 
-  // Dynamic telemetry update loop
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Dynamic jitter
-      const baseThroughput = isAttackActive ? 4.85 : 2.40;
-      const jitterT = (Math.random() * 0.4 - 0.2);
-      setThroughput(Number((baseThroughput + jitterT).toFixed(2)));
+  // Ensure chart points always render smoothly without NaN or breaking
+  const displayPoints =
+    Array.isArray(sparkPoints) && sparkPoints.length >= 2
+      ? sparkPoints
+      : [
+          { allow: 84, drop: 4 },
+          { allow: 88, drop: 5 },
+          { allow: 82, drop: 6 },
+          { allow: 91, drop: 3 },
+          { allow: 86, drop: 5 },
+          { allow: 93, drop: 4 },
+          { allow: 89, drop: 6 },
+          { allow: 95, drop: 4 }
+        ];
 
-      const basePackets = isAttackActive ? 284000 : 152000;
-      const jitterP = Math.floor(Math.random() * 12000 - 6000);
-      setPacketRate(basePackets + jitterP);
+  const totalPoints = displayPoints.length;
+  const allowPoints = displayPoints
+    .map((p, idx) => {
+      const x = ((idx / (totalPoints - 1)) * 300).toFixed(1);
+      const val = typeof p.allow === 'number' ? p.allow : 85;
+      const y = Math.max(8, Math.min(92, 100 - val)).toFixed(1);
+      return `${x},${y}`;
+    })
+    .join(' ');
 
-      // Push new sparkline point
-      setSparkPoints((prev) => {
-        const nextAllow = Math.floor(70 + Math.random() * 25);
-        const nextDrop = isAttackActive 
-          ? Math.floor(55 + Math.random() * 40) // Spike in blocked packets during attack
-          : Math.floor(2 + Math.random() * 10);
-        
-        const updated = [...prev.slice(1), { allow: nextAllow, drop: nextDrop }];
-        return updated;
-      });
-    }, 1800);
-
-    return () => clearInterval(interval);
-  }, [isAttackActive]);
-
-  // Radar continuous rotation
-  useEffect(() => {
-    const radarTimer = setInterval(() => {
-      setRadarAngle((prev) => (prev + 3) % 360);
-    }, 30);
-    return () => clearInterval(radarTimer);
-  }, []);
-
-  const totalRules = rules.length;
-  const allowRules = rules.filter(r => r.action === 'ALLOW').length;
-  const dropRules = rules.filter(r => r.action === 'DROP').length;
+  const dropPoints = displayPoints
+    .map((p, idx) => {
+      const x = ((idx / (totalPoints - 1)) * 300).toFixed(1);
+      const val = typeof p.drop === 'number' ? p.drop : 5;
+      const y = Math.max(8, Math.min(92, 100 - val)).toFixed(1);
+      return `${x},${y}`;
+    })
+    .join(' ');
 
   return (
-    <div className="bg-[#0b121e]/90 border border-slate-800 rounded-xl overflow-hidden shadow-xl flex flex-col h-full backdrop-blur-sm">
-      
-      {/* Analytics Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-            <BarChart3 className="w-4 h-4" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-white font-mono flex items-center gap-2">
-              THREAT & TRAFFIC ANALYTICS
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono border ${
-                isAttackActive 
-                  ? 'bg-rose-950 text-rose-300 border-rose-700 animate-pulse'
-                  : 'bg-emerald-950 text-emerald-300 border-emerald-700'
-              }`}>
-                {isAttackActive ? 'ATTACK DETECTED' : 'NOMINAL FLOW'}
-              </span>
-            </h2>
-            <p className="text-[11px] text-slate-400 font-mono">
-              Real-time Ingress/Egress Inspection Telemetry
-            </p>
-          </div>
+    <section
+      className={`rounded-xl border flex flex-col shadow-sm overflow-hidden transition-colors ${
+        isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
+      }`}
+    >
+      {/* Header */}
+      <div
+        className={`p-4 border-b flex items-center justify-between ${
+          isDarkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-gray-50 border-gray-200'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <Activity className="w-4 h-4 text-blue-600" />
+          <h3 className="font-semibold text-sm">Telemetry & Analytics Dashboard</h3>
         </div>
-
-        <div className="text-xs font-mono text-cyan-400 flex items-center gap-1.5">
-          <Activity className="w-3.5 h-3.5 animate-pulse" />
-          <span>SAMPLING: ACTIVE</span>
-        </div>
+        <span
+          className={`text-[11px] font-medium px-2 py-0.5 rounded border ${
+            isDarkMode
+              ? 'bg-slate-900 text-slate-300 border-slate-700'
+              : 'bg-gray-100 text-slate-700 border-gray-200'
+          }`}
+        >
+          Live Stream
+        </span>
       </div>
 
-      <div className="p-4 space-y-4 flex-1 overflow-y-auto terminal-scroll">
-        
+      <div className="p-5 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
         {/* 4 Metric Cards */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Card 1: Throughput */}
-          <div className="bg-[#070d17] border border-slate-800 p-3 rounded-lg relative overflow-hidden">
-            <div className="text-[10px] font-mono uppercase text-slate-400 flex items-center justify-between">
-              <span>Ingress Bandwidth</span>
-              <Wifi className="w-3 h-3 text-cyan-400" />
+          <div
+            className={`border p-3.5 rounded-lg transition-colors ${
+              isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'
+            }`}
+          >
+            <div className="text-xs text-slate-500 flex justify-between">
+              <span>Ingress Wire</span>
+              <Wifi className="w-3.5 h-3.5 text-blue-600" />
             </div>
-            <div className="text-lg font-bold font-mono text-white mt-1">
-              {throughput} <span className="text-xs font-normal text-slate-400">Gbps</span>
+            <div className="text-lg font-bold mt-1">
+              {(throughput || 2.38).toFixed(2)} <span className="text-xs font-normal text-slate-500">Gbps</span>
             </div>
-            <div className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 mt-1">
-              <TrendingUp className="w-3 h-3" />
-              <span>{isAttackActive ? '+128% Volumetric Spike' : 'Stable Wire-Speed'}</span>
-            </div>
-          </div>
-
-          {/* Card 2: Packet Rate */}
-          <div className="bg-[#070d17] border border-slate-800 p-3 rounded-lg relative overflow-hidden">
-            <div className="text-[10px] font-mono uppercase text-slate-400 flex items-center justify-between">
-              <span>Kernel Packet Rate</span>
-              <Cpu className="w-3 h-3 text-emerald-400" />
-            </div>
-            <div className="text-lg font-bold font-mono text-white mt-1">
-              {(packetRate / 1000).toFixed(1)}k <span className="text-xs font-normal text-slate-400">pps</span>
-            </div>
-            <div className="text-[10px] font-mono text-cyan-400 flex items-center gap-1 mt-1">
-              <span>DPDK Zero-Copy Core</span>
+            <div className="text-[11px] text-green-600 font-medium mt-0.5">
+              {isAttackActive ? '+140% Threat Spike' : 'Nominal Wire-Speed'}
             </div>
           </div>
 
-          {/* Card 3: Threat Mitigation */}
-          <div className={`border p-3 rounded-lg relative overflow-hidden ${
-            isAttackActive 
-              ? 'bg-rose-950/20 border-rose-800/80 shadow-[0_0_12px_rgba(239,68,68,0.2)]'
-              : 'bg-[#070d17] border-slate-800'
-          }`}>
-            <div className="text-[10px] font-mono uppercase text-slate-400 flex items-center justify-between">
-              <span>Mitigation Efficacy</span>
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+          <div
+            className={`border p-3.5 rounded-lg transition-colors ${
+              isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'
+            }`}
+          >
+            <div className="text-xs text-slate-500 flex justify-between">
+              <span>Packet Rate</span>
+              <Cpu className="w-3.5 h-3.5 text-blue-600" />
             </div>
-            <div className={`text-lg font-bold font-mono mt-1 ${isAttackActive ? 'text-rose-400' : 'text-emerald-400'}`}>
-              {isAttackActive ? '99.82%' : '99.99%'}
+            <div className="text-lg font-bold mt-1">
+              {packetRate > 0 ? (packetRate / 1000).toFixed(1) + 'k' : '148.2k'}{' '}
+              <span className="text-xs font-normal text-slate-500">pps</span>
             </div>
-            <div className="text-[10px] font-mono text-slate-400 mt-1">
-              {isAttackActive ? 'IDS Heuristics Intercepting' : '0 Bypasses Detected'}
-            </div>
+            <div className="text-[11px] text-slate-500 mt-0.5">Inbound Packets</div>
           </div>
 
-          {/* Card 4: Threat Alerts */}
-          <div className={`border p-3 rounded-lg relative overflow-hidden ${
-            isAttackActive 
-              ? 'bg-rose-950/30 border-rose-600 shadow-neon-red animate-pulse'
-              : 'bg-[#070d17] border-slate-800'
-          }`}>
-            <div className="text-[10px] font-mono uppercase text-slate-400 flex items-center justify-between">
-              <span>Active Threat Level</span>
-              <ShieldAlert className={`w-3 h-3 ${isAttackActive ? 'text-rose-400' : 'text-slate-500'}`} />
+          <div
+            className={`border p-3.5 rounded-lg transition-colors ${
+              isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'
+            }`}
+          >
+            <div className="text-xs text-slate-500">Allowed Packets</div>
+            <div className="text-lg font-bold text-green-600 dark:text-green-500 mt-1">
+              {allowPkts.toLocaleString()}
             </div>
-            <div className={`text-lg font-bold font-mono mt-1 ${isAttackActive ? 'text-rose-400' : 'text-slate-200'}`}>
-              {isAttackActive ? 'CRITICAL' : 'DEFCON 4'}
+            <div className="text-[11px] text-slate-500 mt-0.5">Permitted Ingress</div>
+          </div>
+
+          <div
+            className={`border p-3.5 rounded-lg transition-colors ${
+              isAttackActive
+                ? isDarkMode
+                  ? 'bg-red-950/40 border-red-800'
+                  : 'bg-red-50 border-red-200'
+                : isDarkMode
+                  ? 'bg-slate-900 border-slate-700'
+                  : 'bg-gray-50 border-gray-200'
+            }`}
+          >
+            <div className="text-xs text-slate-500">Dropped / Blocked</div>
+            <div
+              className={`text-lg font-bold mt-1 ${
+                isAttackActive || dropPkts > 0 ? 'text-red-600' : 'text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {dropPkts.toLocaleString()}
             </div>
-            <div className="text-[10px] font-mono text-slate-400 mt-1">
-              {isAttackActive ? '1 Threat Node Sandboxed' : 'Normal Sentinel Watch'}
+            <div className="text-[11px] text-slate-500 mt-0.5">
+              {isAttackActive ? 'Attack Blocked' : 'Rules Enforced'}
             </div>
           </div>
         </div>
 
-        {/* Live SVG Sparkline Chart: Allowed vs Blocked */}
-        <div className="bg-[#070d17] border border-slate-800 p-3.5 rounded-lg">
+        {/* Real-Time SVG Sparkline Chart - Fixes line rendering bug */}
+        <div
+          className={`border p-4 rounded-lg transition-colors ${
+            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono uppercase text-slate-400 font-semibold">
-              Live Flow Trajectory (Allowed vs Blocked)
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Traffic Volume (Allowed vs Dropped)
             </span>
-            <div className="flex items-center gap-3 text-[10px] font-mono">
-              <span className="flex items-center gap-1 text-emerald-400">
-                <span className="w-2 h-0.5 bg-emerald-400 inline-block" /> Allowed
+            <div className="flex items-center gap-3 text-xs">
+              <span className="flex items-center gap-1.5 text-green-600 font-medium">
+                <span className="w-2.5 h-1 bg-green-600 rounded-sm inline-block" /> Allow Rate
               </span>
-              <span className="flex items-center gap-1 text-rose-400">
-                <span className="w-2 h-0.5 bg-rose-400 inline-block" /> Blocked
+              <span className="flex items-center gap-1.5 text-red-600 font-medium">
+                <span className="w-2.5 h-1 bg-red-600 rounded-sm inline-block" /> Drop Rate
               </span>
             </div>
           </div>
 
-          {/* SVG Sparkline */}
-          <div className="h-28 w-full relative">
-            <svg className="w-full h-full overflow-visible" viewBox="0 0 300 100" preserveAspectRatio="none">
+          <div className="h-28 w-full flex items-center justify-center pt-1">
+            <svg className="w-full h-full overflow-hidden" viewBox="0 0 300 100" preserveAspectRatio="none">
               <defs>
-                <linearGradient id="allowGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                <linearGradient id="allowGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#16a34a" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#16a34a" stopOpacity="0.0" />
                 </linearGradient>
-                <linearGradient id="dropGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.0" />
+                <linearGradient id="dropGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#dc2626" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
-              {/* Grid lines */}
-              <line x1="0" y1="25" x2="300" y2="25" stroke="#1e293b" strokeDasharray="3 3" />
-              <line x1="0" y1="50" x2="300" y2="50" stroke="#1e293b" strokeDasharray="3 3" />
-              <line x1="0" y1="75" x2="300" y2="75" stroke="#1e293b" strokeDasharray="3 3" />
+              {/* Horizontal Grid lines */}
+              <line x1="0" y1="25" x2="300" y2="25" stroke={isDarkMode ? '#334155' : '#e2e8f0'} strokeDasharray="3 3" />
+              <line x1="0" y1="50" x2="300" y2="50" stroke={isDarkMode ? '#334155' : '#e2e8f0'} strokeDasharray="3 3" />
+              <line x1="0" y1="75" x2="300" y2="75" stroke={isDarkMode ? '#334155' : '#e2e8f0'} strokeDasharray="3 3" />
 
-              {/* Allowed line */}
-              {(() => {
-                const points = sparkPoints.map((p, idx) => {
-                  const x = (idx / (sparkPoints.length - 1)) * 300;
-                  const y = 100 - p.allow;
-                  return `${x},${y}`;
-                }).join(' ');
-                return (
-                  <polyline
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    points={points}
-                  />
-                );
-              })()}
+              {/* Allow Area & Line (Green) */}
+              <polygon points={`0,100 ${allowPoints} 300,100`} fill="url(#allowGradient)" />
+              <polyline
+                fill="none"
+                stroke="#16a34a"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points={allowPoints}
+              />
 
-              {/* Blocked / Dropped line */}
-              {(() => {
-                const points = sparkPoints.map((p, idx) => {
-                  const x = (idx / (sparkPoints.length - 1)) * 300;
-                  const y = 100 - p.drop;
-                  return `${x},${y}`;
-                }).join(' ');
-                return (
-                  <polyline
-                    fill="none"
-                    stroke="#ef4444"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    points={points}
-                  />
-                );
-              })()}
+              {/* Drop Area & Line (Red) */}
+              <polygon points={`0,100 ${dropPoints} 300,100`} fill="url(#dropGradient)" />
+              <polyline
+                fill="none"
+                stroke="#dc2626"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points={dropPoints}
+              />
             </svg>
           </div>
         </div>
 
-        {/* Radar & Targeted Ports Breakdown */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          
-          {/* Circular Cyber Threat Radar */}
-          <div className="bg-[#070d17] border border-slate-800 p-3 rounded-lg flex flex-col items-center justify-center text-center">
-            <div className="text-[10px] font-mono uppercase text-slate-400 mb-2 w-full text-left flex justify-between items-center">
-              <span>Threat Radar</span>
-              <span className="text-[9px] text-cyan-400">360° SWEEP</span>
+        {/* Port Distribution Breakdown */}
+        <div
+          className={`border p-4 rounded-lg space-y-3 text-xs transition-colors ${
+            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'
+          }`}
+        >
+          <div className="font-semibold text-slate-700 dark:text-slate-300 flex justify-between">
+            <span>Port Traffic Distribution</span>
+            <span className="text-slate-500 font-normal">Layer 4 Analysis</span>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1">
+              <span>Port 443 (HTTPS)</span>
+              <span className="font-medium">
+                {totalCaptured > 0 ? `${p443Pct}% (${p443Count})` : '52%'}
+              </span>
             </div>
-
-            <div className="relative w-28 h-28 my-1 flex items-center justify-center">
-              {/* Concentric rings */}
-              <div className="absolute inset-0 rounded-full border border-slate-800" />
-              <div className="absolute inset-3 rounded-full border border-slate-800/80" />
-              <div className="absolute inset-7 rounded-full border border-slate-800/60" />
-              <div className="absolute inset-0 border-t border-b border-slate-800/60" />
-              <div className="absolute inset-0 border-l border-r border-slate-800/60" />
-
-              {/* Rotating radar beam */}
-              <div 
-                className="absolute inset-0 rounded-full origin-center pointer-events-none"
-                style={{
-                  transform: `rotate(${radarAngle}deg)`,
-                  background: 'conic-gradient(from 0deg, rgba(6, 182, 212, 0.4) 0deg, rgba(6, 182, 212, 0) 60deg, transparent 60deg)'
-                }}
+            <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'}`}>
+              <div
+                className="bg-green-600 h-full rounded-full transition-all duration-300"
+                style={{ width: `${p443Pct}%` }}
               />
-
-              {/* Center point */}
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee] z-10" />
-
-              {/* Threat blips */}
-              {isAttackActive ? (
-                <div 
-                  className="absolute top-5 right-6 w-2.5 h-2.5 rounded-full bg-rose-500 shadow-neon-red animate-ping"
-                  title="Host 192.168.1.105 (Hostile Probe)"
-                />
-              ) : (
-                <div className="absolute bottom-6 left-7 w-1.5 h-1.5 rounded-full bg-emerald-400 opacity-60" />
-              )}
-            </div>
-
-            <div className="text-[10px] font-mono text-slate-400 mt-1">
-              {isAttackActive ? (
-                <span className="text-rose-400 font-bold">1 Hostile Blip: 192.168.1.105</span>
-              ) : (
-                <span>No hostile incursions in perimeter</span>
-              )}
             </div>
           </div>
 
-          {/* Top Targeted Ports Progress Bars & Rule summary */}
-          <div className="bg-[#070d17] border border-slate-800 p-3 rounded-lg flex flex-col justify-between">
-            <div>
-              <div className="text-[10px] font-mono uppercase text-slate-400 mb-2 font-semibold flex justify-between">
-                <span>Port Threat Vectors</span>
-                <span className="text-slate-500 font-normal">{totalRules} Policies ({allowRules}A / {dropRules}D)</span>
-              </div>
-              <div className="space-y-2 text-[11px] font-mono">
-                <div>
-                  <div className="flex justify-between text-slate-300 mb-0.5">
-                    <span>Port 443 (HTTPS)</span>
-                    <span className="text-slate-400">45%</span>
-                  </div>
-                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: '45%' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-slate-300 mb-0.5">
-                    <span>Port 80 (HTTP)</span>
-                    <span className="text-slate-400">28%</span>
-                  </div>
-                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-cyan-500 h-full rounded-full" style={{ width: '28%' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-slate-300 mb-0.5">
-                    <span>Port 22 (SSH Brute)</span>
-                    <span className={isAttackActive ? 'text-rose-400 font-bold' : 'text-slate-400'}>
-                      {isAttackActive ? '36% (BURST)' : '18%'}
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${isAttackActive ? 'bg-rose-500 shadow-neon-red' : 'bg-amber-500'}`} 
-                      style={{ width: isAttackActive ? '36%' : '18%' }} 
-                    />
-                  </div>
-                </div>
-              </div>
+          <div>
+            <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1">
+              <span>Port 80 (HTTP)</span>
+              <span className="font-medium">
+                {totalCaptured > 0 ? `${p80Pct}% (${p80Count})` : '28%'}
+              </span>
             </div>
-
-            <div className="pt-2 border-t border-slate-800/80 text-[10px] font-mono text-slate-500 flex justify-between">
-              <span>FILTER CHAIN:</span>
-              <span className="text-emerald-400">FORWARD / INPUT</span>
+            <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'}`}>
+              <div
+                className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                style={{ width: `${p80Pct}%` }}
+              />
             </div>
           </div>
 
+          <div>
+            <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1">
+              <span>Port 22 (SSH)</span>
+              <span
+                className={`font-medium ${
+                  isAttackActive ? 'text-red-600 font-bold' : ''
+                }`}
+              >
+                {totalCaptured > 0 ? `${p22Pct}% (${p22Count})` : isAttackActive ? '38% (Burst)' : '14%'}
+              </span>
+            </div>
+            <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-gray-200'}`}>
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  isAttackActive ? 'bg-red-600' : 'bg-amber-600'
+                }`}
+                style={{ width: isAttackActive ? '38%' : `${p22Pct}%` }}
+              />
+            </div>
+          </div>
         </div>
 
+        {/* Kernel Hooks Table */}
+        <div
+          className={`border p-4 rounded-lg text-xs space-y-1.5 transition-colors ${
+            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'
+          }`}
+        >
+          <div className="font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            Kernel Hooks Status
+          </div>
+          <div className="flex justify-between text-slate-600 dark:text-slate-400">
+            <span>PREROUTING Chain:</span>
+            <span className="text-green-600 font-medium">Active (eBPF XDP)</span>
+          </div>
+          <div className="flex justify-between text-slate-600 dark:text-slate-400">
+            <span>INPUT Chain:</span>
+            <span className="text-green-600 font-medium">Enforcing</span>
+          </div>
+          <div className="flex justify-between text-slate-600 dark:text-slate-400">
+            <span>FORWARD Chain:</span>
+            <span className="text-green-600 font-medium">Stateful Inspection</span>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

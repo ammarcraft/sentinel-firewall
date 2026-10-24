@@ -4,8 +4,9 @@ import AnalyticsPanel from '../components/AnalyticsPanel';
 
 export default function LiveMonitorView({
   isDarkMode,
-  filteredLogs,
-  totalPkts,
+  logs = [],
+  filteredLogs = [],
+  totalPkts = 0,
   isTerminalPaused,
   setIsTerminalPaused,
   autoScroll,
@@ -20,13 +21,15 @@ export default function LiveMonitorView({
   packetRate,
   allowPkts,
   dropPkts,
-  sparkPoints
+  sparkPoints = [],
+  onClearLogs
 }) {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 min-h-[640px]">
       <div className="xl:col-span-7 flex flex-col">
         <LiveTrafficTerminal
           isDarkMode={isDarkMode}
+          logs={logs}
           filteredLogs={filteredLogs}
           totalPkts={totalPkts}
           isTerminalPaused={isTerminalPaused}
@@ -39,12 +42,14 @@ export default function LiveMonitorView({
           setLogGrep={setLogGrep}
           isAttackActive={isAttackActive}
           terminalBoxRef={terminalBoxRef}
+          onClearLogs={onClearLogs}
         />
       </div>
 
       <div className="xl:col-span-5 flex flex-col">
         <AnalyticsPanel
           isDarkMode={isDarkMode}
+          logs={logs}
           throughput={throughput}
           packetRate={packetRate}
           allowPkts={allowPkts}
