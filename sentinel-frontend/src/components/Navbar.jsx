@@ -7,8 +7,7 @@ import {
   Moon,
   FileSpreadsheet,
   FileText,
-  Folder,
-  FolderArchive
+  Folder
 } from 'lucide-react';
 
 export default function Navbar({
@@ -19,8 +18,7 @@ export default function Navbar({
   onToggleAttack,
   exportOpen,
   setExportOpen,
-  onExport,
-  onDownloadZip
+  onExport
 }) {
   return (
     <header
@@ -121,20 +119,6 @@ export default function Navbar({
                       <div className="text-[10px] text-slate-400">Firewall audit & threat metrics</div>
                     </div>
                   </button>
-                  {onDownloadZip && (
-                    <button
-                      onClick={onDownloadZip}
-                      className={`w-full text-left px-3 py-2 rounded flex items-center gap-2.5 cursor-pointer transition border-t border-gray-100 dark:border-slate-700/60 ${
-                        isDarkMode ? 'hover:bg-slate-700 text-slate-200' : 'hover:bg-gray-50 text-slate-700'
-                      }`}
-                    >
-                      <FolderArchive className="w-4 h-4 text-purple-600 shrink-0" />
-                      <div>
-                        <div className="font-medium text-slate-900 dark:text-slate-100">Full Project Source (.zip)</div>
-                        <div className="text-[10px] text-slate-400">Complete React + Tailwind project</div>
-                      </div>
-                    </button>
-                  )}
                 </div>
                 <div className="mt-1 pt-2 px-3 py-2 text-[10px] border-t border-gray-100 dark:border-slate-700 bg-gray-50/70 dark:bg-slate-900/50 rounded-b">
                   <div className="flex items-center gap-1 font-medium text-slate-600 dark:text-slate-400 mb-0.5">
