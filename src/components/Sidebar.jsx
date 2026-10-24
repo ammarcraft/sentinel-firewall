@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Shield,
   Activity,
+  Radio,
   SlidersHorizontal,
   LogOut,
   Cpu,
@@ -15,6 +16,7 @@ export default function Sidebar({
   isAttackActive,
   totalPkts,
   rulesCount,
+  threatsCount = 0,
   onLogout,
   currentUser = 'Administrator'
 }) {
@@ -86,7 +88,41 @@ export default function Sidebar({
           </span>
         </button>
 
-        {/* View 2: Policy & Rules */}
+        {/* View 2: Intrusion Detection (IDS) */}
+        <button
+          onClick={() => setActiveView('ids')}
+          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer border ${
+            activeView === 'ids'
+              ? isDarkMode
+                ? 'bg-slate-800 text-red-400 border-slate-700'
+                : 'bg-red-50 text-red-700 border-red-200'
+              : isDarkMode
+                ? 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-gray-50'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Radio className={`w-4 h-4 ${isAttackActive ? 'text-red-500 animate-pulse' : ''}`} />
+            <span>Intrusion Detection (IDS)</span>
+          </div>
+          <span
+            className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold ${
+              threatsCount > 0
+                ? isAttackActive
+                  ? 'bg-red-600 text-white animate-pulse'
+                  : isDarkMode
+                    ? 'bg-amber-950/60 text-amber-400 border border-amber-800/50'
+                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                : isDarkMode
+                  ? 'bg-slate-900 text-slate-400'
+                  : 'bg-gray-100 text-slate-600'
+            }`}
+          >
+            {threatsCount} threats
+          </span>
+        </button>
+
+        {/* View 3: Policy & Rules */}
         <button
           onClick={() => setActiveView('rules')}
           className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer border ${

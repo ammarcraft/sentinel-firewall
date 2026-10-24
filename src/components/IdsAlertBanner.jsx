@@ -5,7 +5,8 @@ export default function IdsAlertBanner({
   isDarkMode,
   criticalAlert,
   onAutoBlock,
-  onDismiss
+  onDismiss,
+  onViewIds
 }) {
   if (!criticalAlert) return null;
 
@@ -29,9 +30,21 @@ export default function IdsAlertBanner({
         </div>
 
         <div className="flex items-center gap-2">
+          {onViewIds && (
+            <button
+              onClick={onViewIds}
+              className={`text-xs font-semibold px-2.5 py-1.5 rounded-md transition cursor-pointer border ${
+                isDarkMode
+                  ? 'bg-slate-900 text-slate-200 border-slate-700 hover:bg-slate-800'
+                  : 'bg-white text-slate-700 border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              View in IDS Feed
+            </button>
+          )}
           <button
             onClick={() => onAutoBlock(criticalAlert.ip)}
-            className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition cursor-pointer flex items-center gap-1.5"
+            className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
             <ShieldAlert className="w-3.5 h-3.5" />
             <span>Auto-Block IP (Add DROP Rule)</span>

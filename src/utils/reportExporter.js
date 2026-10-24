@@ -41,7 +41,27 @@ export function generateAuditPdf(lines) {
   return body + xref + trailer;
 }
 
-export async function exportFirewallReport({ format, logs, rules, stats, isAttackActive }) {
+export async function exportFirewallReport(arg1, arg2, arg3, arg4, arg5) {
+  let format = 'CSV';
+  let rules = [];
+  let logs = [];
+  let isAttackActive = false;
+  let threatEvents = [];
+
+  if (typeof arg1 === 'object' && arg1 !== null) {
+    format = arg1.format || 'CSV';
+    rules = arg1.rules || [];
+    logs = arg1.logs || [];
+    isAttackActive = !!arg1.isAttackActive;
+    threatEvents = arg1.threatEvents || [];
+  } else {
+    format = arg1 || 'CSV';
+    rules = arg2 || [];
+    logs = arg3 || [];
+    isAttackActive = !!arg4;
+    threatEvents = arg5 || [];
+  }
+
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const timestampStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
@@ -50,7 +70,11 @@ export async function exportFirewallReport({ format, logs, rules, stats, isAttac
   let content = '';
   let mimeType = '';
 
-  const { totalPkts, allowPkts, dropPkts, allowPct, dropPct } = stats;
+  const totalPkts = logs.length;
+  const allowPkts = logs.filter((l) => l.action === 'ALLOW').length;
+  const dropPkts = logs.filter((l) => l.action === 'DROP').length;
+  const allowPct = totalPkts > 0 ? Math.round((allowPkts / totalPkts) * 100) : 100;
+  const dropPct = totalPkts > 0 ? Math.round((dropPkts / totalPkts) * 100) : 0;
 
   if (format === 'CSV') {
     filename = `sentinel_firewall_logs_${timestampStr}.csv`;
@@ -63,13 +87,14 @@ export async function exportFirewallReport({ format, logs, rules, stats, isAttac
       '# Target Path: Reports directory                                                #',
       `# Operational Status: ${isAttackActive ? 'ATTACK SIMULATION ACTIVE' : 'NORMAL OPERATIONAL BASELINE'}               #`,
       `# Telemetry Summary: Total=${totalPkts} | Allowed=${allowPkts} (${allowPct}%) | Dropped=${dropPkts} (${dropPct}%)   #`,
+      `# IDS Heuristic Events: Total Signatures=${threatEvents.length}                              #`,
       '# ============================================================================== #',
       '',
       '--- [SECTION 1: ACTIVE FIREWALL RULES] ---',
       'Rule_ID,Target_IP,Port,Protocol,Action,Description,Hits,Bytes,Status',
       ...rules.map(
         (r) =>
-          `"${r.id}","${r.ip}","${r.port}","${r.protocol}","${r.action}","${r.description.replace(/"/g, '""')}","${r.hits}","${r.bytes}","${r.status}"`
+          `"${r.id}","${r.ip}","${r.port}","${r.protocol}","${r.action}","${(r.description || '').replace(/"/g, '""')}","${r.hits}","${r.bytes}","${r.status}"`
       ),
       '',
       '--- [SECTION 2: LIVE PACKET INSPECTION LOGS] ---',
@@ -77,6 +102,13 @@ export async function exportFirewallReport({ format, logs, rules, stats, isAttac
       ...logs.map(
         (l) =>
           `"${l.time}","${l.id}","${l.proto}","${l.srcIp}","${l.srcPort}","${l.dstIp}","${l.dstPort}","${l.len}","${l.ttl}","${l.action}","${l.rule}"`
+      ),
+      '',
+      '--- [SECTION 3: INTRUSION DETECTION SYSTEM (IDS) THREAT EVENTS] ---',
+      'Threat_ID,Timestamp,Attacker_IP,Target_Port,Protocol,Attack_Vector,Signature_ID,Severity,Confidence,Probes',
+      ...threatEvents.map(
+        (t) =>
+          `"${t.id}","${t.time}","${t.attackerIp}","${t.targetPort}","${t.protocol}","${(t.vector || '').replace(/"/g, '""')}","${t.signatureId}","${t.severity}","${t.confidence}%","${t.packetCount || 1}"`
       )
     ];
     content = csvLines.join('\r\n');
@@ -95,6 +127,7 @@ export async function exportFirewallReport({ format, logs, rules, stats, isAttac
       `Allowed        : ${allowPkts} (${allowPct}%)`,
       `Dropped        : ${dropPkts} (${dropPct}%)`,
       `Active Rules   : ${rules.length} policies enforced`,
+      `Threat Events  : ${threatEvents.length} security signatures flagged`,
       '------------------------------------------------------------------------',
       'SECTION 1: ACTIVE FIREWALL RULES',
       '------------------------------------------------------------------------',
@@ -105,9 +138,16 @@ export async function exportFirewallReport({ format, logs, rules, stats, isAttac
       '------------------------------------------------------------------------',
       'SECTION 2: RECENT PACKET LOGS (SAMPLE)',
       '------------------------------------------------------------------------',
-      ...logs.slice(0, 18).map(
+      ...logs.slice(0, 10).map(
         (l) =>
           `${l.time} | ${l.id} | ${l.action.padEnd(5)} | ${l.proto.padEnd(10)} | ${l.srcIp}:${l.srcPort} -> ${l.dstIp}:${l.dstPort}`
+      ),
+      '------------------------------------------------------------------------',
+      'SECTION 3: INTRUSION DETECTION SYSTEM (IDS) THREAT SIGNATURES',
+      '------------------------------------------------------------------------',
+      ...threatEvents.slice(0, 8).map(
+        (t) =>
+          `[${t.severity.padEnd(8)}] ${t.time} | ${t.attackerIp} -> Port ${t.targetPort} | ${t.vector} (${t.signatureId})`
       ),
       '========================================================================',
       '                       END OF AUDIT REPORT                              ',

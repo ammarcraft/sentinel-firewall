@@ -29,12 +29,18 @@ export default function Navbar({
       {/* Current View Breadcrumb / Title */}
       <div>
         <h2 className="text-sm font-bold tracking-tight">
-          {activeView === 'monitor' ? 'Live Monitor & Threat Telemetry' : 'Firewall Policy & Filtering Rules Engine'}
+          {activeView === 'monitor'
+            ? 'Live Monitor & Threat Telemetry'
+            : activeView === 'rules'
+              ? 'Firewall Policy & Filtering Rules Engine'
+              : 'Intrusion Detection System (IDS) & Threat Intelligence'}
         </h2>
         <p className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
           {activeView === 'monitor'
             ? 'Continuous network packet inspection and stateful analytics'
-            : 'Deterministic packet filtering configuration applied to Linux Netfilter / iptables chains'}
+            : activeView === 'rules'
+              ? 'Deterministic packet filtering configuration applied to Linux Netfilter / iptables chains'
+              : 'Heuristic anomaly detection, threat signature analysis & automated mitigation'}
         </p>
       </div>
 

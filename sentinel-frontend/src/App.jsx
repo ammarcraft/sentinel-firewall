@@ -6,11 +6,12 @@ import IdsAlertBanner from './components/IdsAlertBanner';
 import ToastNotification from './components/ToastNotification';
 import LiveMonitorView from './views/LiveMonitorView';
 import PolicyRulesView from './views/PolicyRulesView';
+import IntrusionDetectionView from './views/IntrusionDetectionView';
 import { exportFirewallReport } from './utils/reportExporter';
 import { auth } from './firebase';
 import { signInAnonymously, signInWithEmailAndPassword } from 'firebase/auth';
 import { api } from './services/api';
-import { INITIAL_RULES, INITIAL_SPARKPOINTS } from './constants/initialData';
+import { INITIAL_RULES, INITIAL_SPARKPOINTS, INITIAL_THREAT_EVENTS } from './constants/initialData';
 
 export default function App() {
   // Theme State: Default is Light Mode
@@ -64,9 +65,10 @@ export default function App() {
   const [autoScroll, setAutoScroll] = useState(true);
   const terminalBoxRef = useRef(null);
 
-  // IDS Attack Simulation State
+  // IDS Attack Simulation & Threat Intelligence State
   const [isAttackActive, setIsAttackActive] = useState(false);
   const [criticalAlert, setCriticalAlert] = useState(null);
+  const [threatEvents, setThreatEvents] = useState(INITIAL_THREAT_EVENTS);
 
   // Analytics Telemetry State - Starts with nominal telemetry and updates with real traffic
   const [throughput, setThroughput] = useState(2.38);
@@ -498,6 +500,81 @@ export default function App() {
     });
   }, []);
 
+  // Real-time Threat Signature Anomaly Inspection
+  const inspectPacketForThreats = useCallback((pkt) => {
+    if (!pkt) return;
+
+    const isAttackIp = pkt.srcIp === '192.168.1.105' || pkt.srcIp === '45.154.255.89' || pkt.srcIp === '185.220.101.5';
+    const isSynScan = pkt.proto && pkt.proto.includes('SYN');
+    const sensitivePorts = [21, 22, 23, 25, 135, 445, 1433, 3389];
+
+    if (isAttackIp || (isSynScan && sensitivePorts.includes(pkt.dstPort)) || (isAttackActive && Math.random() > 0.3)) {
+      let vector = 'TCP SYN Flood (DDoS)';
+      let signatureId = 'ET-DOS-SYNFLOOD';
+      let severity = 'CRITICAL';
+
+      if (pkt.dstPort === 22) {
+        vector = 'SSH Credential Brute-Force';
+        signatureId = 'ET-AUTH-SSH-PROBE';
+        severity = 'HIGH';
+      } else if (pkt.dstPort === 3389) {
+        vector = 'RDP Remote Desktop Brute-Force';
+        signatureId = 'ET-AUTH-RDP-ATTACK';
+        severity = 'HIGH';
+      } else if (pkt.dstPort === 445 || pkt.dstPort === 135) {
+        vector = 'SMB / RPC Exploit Probe (MS17-010)';
+        signatureId = 'ET-EXPLOIT-SMB-PROBE';
+        severity = 'CRITICAL';
+      } else if (pkt.dstPort === 80 || pkt.dstPort === 8080) {
+        vector = isSynScan ? 'HTTP Service Flooding' : 'Web SQLi / Directory Traversal Scan';
+        signatureId = isSynScan ? 'ET-DOS-HTTP-FLOOD' : 'ET-WEB-SQLI-SCAN';
+        severity = isSynScan ? 'HIGH' : 'MEDIUM';
+      } else if (pkt.dstPort === 53) {
+        vector = 'DNS Amplification Reflection Query';
+        signatureId = 'ET-DNS-AMPLIFY';
+        severity = 'MEDIUM';
+      } else if ([21, 23, 25, 1433].includes(pkt.dstPort)) {
+        vector = 'Reconnaissance / Service Port Scan';
+        signatureId = 'ET-SCAN-PORTSWEEP';
+        severity = 'HIGH';
+      }
+
+      setThreatEvents((prev) => {
+        // Aggregate if same attacker and vector within 8 seconds
+        const existingIdx = prev.findIndex(
+          (t) => t.attackerIp === pkt.srcIp && t.vector === vector && Date.now() - t.timestamp < 8000
+        );
+
+        if (existingIdx !== -1) {
+          const copy = [...prev];
+          copy[existingIdx] = {
+            ...copy[existingIdx],
+            time: pkt.time,
+            timestamp: Date.now(),
+            packetCount: (copy[existingIdx].packetCount || 1) + 1
+          };
+          return copy;
+        }
+
+        const newThreat = {
+          id: `THR-${Math.floor(1000 + Math.random() * 9000)}`,
+          time: pkt.time,
+          timestamp: Date.now(),
+          attackerIp: pkt.srcIp,
+          targetPort: pkt.dstPort,
+          protocol: pkt.proto,
+          vector,
+          signatureId,
+          severity,
+          confidence: Math.floor(92 + Math.random() * 8),
+          packetCount: 1
+        };
+
+        return [newThreat, ...prev.slice(0, 49)];
+      });
+    }
+  }, [isAttackActive]);
+
   // Terminal Live Stream loop
   useEffect(() => {
     if (!isLoggedIn || isTerminalPaused) return;
@@ -508,10 +585,11 @@ export default function App() {
       setLogs((prev) => [...prev.slice(-60), newPkt]);
       recordPacketHit(newPkt.rule, newPkt.len);
       api.recordLog(newPkt);
+      inspectPacketForThreats(newPkt);
     }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [isLoggedIn, isTerminalPaused, isAttackActive, generatePacket, recordPacketHit]);
+  }, [isLoggedIn, isTerminalPaused, isAttackActive, generatePacket, recordPacketHit, inspectPacketForThreats]);
 
   // Auto-scroll inside terminal container ONLY
   useEffect(() => {
@@ -662,6 +740,7 @@ export default function App() {
       setTimeout(() => setToastNotification(null), 3000);
     } else {
       setIsAttackActive(true);
+      const alertTime = new Date().toTimeString().split(' ')[0];
       setCriticalAlert({
         id: Date.now(),
         ip: '192.168.1.105',
@@ -669,10 +748,26 @@ export default function App() {
         vector: 'TCP SYN Flood / Port Scan (Ports 21-8080)',
         rate: '2,480 probes/sec threshold exceeded'
       });
+
+      // Log initial high-priority signature into threat feed
+      const initialThreat = {
+        id: `THR-${Date.now().toString().slice(-4)}`,
+        time: alertTime,
+        timestamp: Date.now(),
+        attackerIp: '192.168.1.105',
+        targetPort: 'MULTI',
+        protocol: 'TCP [SYN]',
+        vector: 'TCP SYN Flood / Port Scan (Ports 21-8080)',
+        signatureId: 'ET-DOS-SYNFLOOD-CRITICAL',
+        severity: 'CRITICAL',
+        confidence: 99,
+        packetCount: 2480
+      };
+      setThreatEvents((prev) => [initialThreat, ...prev.slice(0, 49)]);
     }
   };
 
-  const handleAutoBlock = async (ipToBlock) => {
+  const handleAutoBlock = async (ipToBlock, vectorDesc) => {
     const existing = rules.find((r) => r.ip === ipToBlock && r.action === 'DROP');
     if (!existing) {
       const mitigationRule = {
@@ -680,7 +775,7 @@ export default function App() {
         port: 'ALL',
         protocol: 'ALL',
         action: 'DROP',
-        description: `Auto-Blocked: Suspicious scanning from ${ipToBlock}`,
+        description: vectorDesc ? `Auto-Mitigated: ${vectorDesc} from ${ipToBlock}` : `Auto-Blocked: Suspicious scanning from ${ipToBlock}`,
         hits: 1,
         rawBytes: 64,
         bytes: '64 B',
@@ -695,19 +790,30 @@ export default function App() {
       };
       setRules((prev) => [saved, ...prev]);
     }
-    setCriticalAlert(null);
+    if (criticalAlert && (criticalAlert.ip === ipToBlock || !criticalAlert.ip)) {
+      setCriticalAlert(null);
+    }
     setToastNotification({
       title: 'Threat Mitigated',
-      desc: `Rule deployed: Traffic from ${ipToBlock} dropped.`
+      desc: `Rule deployed: All traffic from ${ipToBlock} dropped.`
     });
     setTimeout(() => setToastNotification(null), 3500);
+  };
+
+  const handleClearThreats = () => {
+    setThreatEvents([]);
+    setToastNotification({
+      title: 'Threat Feed Flushed',
+      desc: 'All security signature event logs cleared.'
+    });
+    setTimeout(() => setToastNotification(null), 3000);
   };
 
   // -------------------------------------------------------------
   // Export & Download Handlers
   // -------------------------------------------------------------
   const handleExport = (format) => {
-    exportFirewallReport(format, rules, logs, isAttackActive);
+    exportFirewallReport(format, rules, logs, isAttackActive, threatEvents);
     setExportOpen(false);
     setToastNotification({
       title: `Telemetry Report Exported (${format.toUpperCase()})`,
@@ -795,6 +901,7 @@ export default function App() {
         isAttackActive={isAttackActive}
         totalPkts={totalPkts}
         rulesCount={rules.length}
+        threatsCount={threatEvents.filter((t) => !rules.some((r) => r.ip === t.attackerIp && r.action === 'DROP' && r.status === 'ACTIVE')).length}
         onLogout={handleLogout}
         currentUser={username || (authTab === 'firebase' && firebaseEmail ? firebaseEmail.split('@')[0] : 'SecOps Admin')}
       />
@@ -819,6 +926,7 @@ export default function App() {
           criticalAlert={criticalAlert}
           onAutoBlock={handleAutoBlock}
           onDismiss={() => setCriticalAlert(null)}
+          onViewIds={() => setActiveView('ids')}
         />
 
         {/* Global Toast Notification */}
@@ -852,6 +960,19 @@ export default function App() {
               dropPkts={dropPkts}
               sparkPoints={sparkPoints}
               onClearLogs={handleClearLogs}
+            />
+          )}
+
+          {activeView === 'ids' && (
+            <IntrusionDetectionView
+              isDarkMode={isDarkMode}
+              threatEvents={threatEvents}
+              rules={rules}
+              isAttackActive={isAttackActive}
+              onToggleAttack={handleToggleAttack}
+              onAutoBlock={handleAutoBlock}
+              onClearThreats={handleClearThreats}
+              totalPkts={totalPkts}
             />
           )}
 

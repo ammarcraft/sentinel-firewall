@@ -32,6 +32,36 @@ export const INITIAL_SPARKPOINTS = [
   { allow: 95, drop: 6 }
 ];
 
+// Initial Threat Signatures for Intrusion Detection System (IDS)
+export const INITIAL_THREAT_EVENTS = [
+  {
+    id: 'THR-8901',
+    time: '11:15:20.142',
+    timestamp: Date.now() - 360000,
+    attackerIp: '194.26.29.112',
+    targetPort: 23,
+    protocol: 'TCP [SYN]',
+    vector: 'Unencrypted Telnet Reconnaissance Scan',
+    signatureId: 'ET-SCAN-TELNET-PROBE',
+    severity: 'LOW',
+    confidence: 94,
+    packetCount: 14
+  },
+  {
+    id: 'THR-8902',
+    time: '11:21:45.890',
+    timestamp: Date.now() - 180000,
+    attackerIp: '45.154.255.89',
+    targetPort: 22,
+    protocol: 'TCP [SYN]',
+    vector: 'SSH Credential Brute-Force Probe',
+    signatureId: 'ET-AUTH-SSH-BRUTEFORCE',
+    severity: 'HIGH',
+    confidence: 98,
+    packetCount: 42
+  }
+];
+
 // Quick Port Configuration Presets for the Rule Creation Form
 export const QUICK_PORT_PRESETS = [
   { label: 'HTTPS (443)', port: '443', proto: 'TCP' },
