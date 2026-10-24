@@ -6,7 +6,8 @@ import {
   SlidersHorizontal,
   LogOut,
   Cpu,
-  Wifi
+  Wifi,
+  Globe
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -17,6 +18,7 @@ export default function Sidebar({
   totalPkts,
   rulesCount,
   threatsCount = 0,
+  geoNodesCount = 8,
   onLogout,
   currentUser = 'Administrator'
 }) {
@@ -145,6 +147,32 @@ export default function Sidebar({
             }`}
           >
             {rulesCount} rules
+          </span>
+        </button>
+
+        {/* View 4: IP Geolocation & Threat Tracker */}
+        <button
+          onClick={() => setActiveView('geo')}
+          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer border ${
+            activeView === 'geo'
+              ? isDarkMode
+                ? 'bg-slate-800 text-amber-400 border-slate-700'
+                : 'bg-amber-50 text-amber-700 border-amber-200'
+              : isDarkMode
+                ? 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-gray-50'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Globe className="w-4 h-4 text-blue-400" />
+            <span>IP Geo Tracker</span>
+          </div>
+          <span
+            className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+              isDarkMode ? 'bg-slate-900 text-slate-400' : 'bg-gray-100 text-slate-600'
+            }`}
+          >
+            {geoNodesCount} nodes
           </span>
         </button>
 

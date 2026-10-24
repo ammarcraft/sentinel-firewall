@@ -104,5 +104,51 @@ export const api = {
     } catch {
       // Ignore background log sync failure
     }
+  },
+
+  // -------------------------------------------------------------
+  // Real Network Traffic Bridge & Live Sniffer Methods
+  // -------------------------------------------------------------
+
+  // Get SSE Live Packet Streaming URL
+  getSseStreamUrl() {
+    return `${API_BASE}/network/live-stream`;
+  },
+
+  // Check Network Sniffer Bridge status
+  async getNetworkStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/network/status`, { signal: AbortSignal.timeout(2000) });
+      if (!res.ok) return { online: false };
+      return await res.json();
+    } catch {
+      return { online: false };
+    }
+  },
+
+  // Get physical & virtual network interfaces on host
+  async getNetworkInterfaces() {
+    try {
+      const res = await fetch(`${API_BASE}/network/interfaces`, { signal: AbortSignal.timeout(2500) });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  // Ingest packet payload directly into backend bridge
+  async ingestLivePacket(packet) {
+    try {
+      const res = await fetch(`${API_BASE}/network/ingest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(packet),
+        signal: AbortSignal.timeout(2000)
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
   }
 };

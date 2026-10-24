@@ -7,6 +7,9 @@ import ToastNotification from './components/ToastNotification';
 import LiveMonitorView from './views/LiveMonitorView';
 import PolicyRulesView from './views/PolicyRulesView';
 import IntrusionDetectionView from './views/IntrusionDetectionView';
+import IpGeoTrackerView from './views/IpGeoTrackerView';
+import AttackSimulationConsole, { ATTACK_SCENARIOS } from './components/AttackSimulationConsole';
+import SentinelAiAnalyst from './components/SentinelAiAnalyst';
 import { exportFirewallReport } from './utils/reportExporter';
 import { auth } from './firebase';
 import { signInAnonymously, signInWithEmailAndPassword } from 'firebase/auth';
@@ -65,10 +68,18 @@ export default function App() {
   const [autoScroll, setAutoScroll] = useState(true);
   const terminalBoxRef = useRef(null);
 
-  // IDS Attack Simulation & Threat Intelligence State
+  // Live Attack Simulation & Forensic AI State
   const [isAttackActive, setIsAttackActive] = useState(false);
+  const [activeScenario, setActiveScenario] = useState(ATTACK_SCENARIOS[0]);
+  const [isAttackConsoleOpen, setIsAttackConsoleOpen] = useState(false);
+  const [isAiAnalystOpen, setIsAiAnalystOpen] = useState(false);
   const [criticalAlert, setCriticalAlert] = useState(null);
   const [threatEvents, setThreatEvents] = useState(INITIAL_THREAT_EVENTS);
+
+  // Operational Mode State: 'simulation' (Attack Scenarios) vs 'live' (Real OS Network Sniffer Bridge)
+  const [trafficMode, setTrafficMode] = useState('simulation');
+  const [snifferStatus, setSnifferStatus] = useState({ connected: false, interface: '' });
+  const [aiAnalystQuery, setAiAnalystQuery] = useState(null);
 
   // Analytics Telemetry State - Starts with nominal telemetry and updates with real traffic
   const [throughput, setThroughput] = useState(2.38);
@@ -357,11 +368,17 @@ export default function App() {
     let len = Math.floor(64 + Math.random() * 1400);
 
     if (isAttackPacket) {
-      srcIp = '192.168.1.105';
-      const scanPorts = [21, 22, 23, 25, 80, 135, 443, 445, 1433, 3389, 8080];
-      dstPort = scanPorts[Math.floor(Math.random() * scanPorts.length)];
-      proto = 'TCP [SYN]';
-      len = 64;
+      srcIp = activeScenario?.attackerIp || '192.168.1.105';
+
+      if (activeScenario?.targetPort === 'MULTI' || activeScenario?.scanPorts) {
+        const ports = activeScenario.scanPorts || [21, 22, 23, 25, 80, 135, 443, 445, 1433, 3389, 8080];
+        dstPort = ports[Math.floor(Math.random() * ports.length)];
+      } else {
+        dstPort = Number(activeScenario?.targetPort) || 443;
+      }
+
+      proto = activeScenario?.protocol || 'TCP [SYN]';
+      len = activeScenario?.packetSize || (proto.includes('HTTP') ? 1240 : 64);
     } else {
       const normalIps = ['142.250.190.46', '172.217.16.206', '104.244.42.1', '185.199.108.153', '20.112.52.29'];
       const normalPorts = [443, 80, 22, 53, 8080];
@@ -408,9 +425,10 @@ export default function App() {
     let matchedRule = 'DEFAULT';
 
     if (isAttackPacket) {
-      // 1. Check if there is an explicit user rule matching 192.168.1.105 (e.g. from Auto-Block or manual configuration)
+      // 1. Check if there is an explicit user rule matching the attacker IP
+      const currentAttacker = activeScenario?.attackerIp || '192.168.1.105';
       const explicitRule = sortedRules.find(
-        (r) => (r.ip === srcIp || r.ip === '192.168.1.105') && matchRule(r)
+        (r) => (r.ip === srcIp || r.ip === currentAttacker) && matchRule(r)
       );
 
       if (explicitRule) {
@@ -456,7 +474,7 @@ export default function App() {
       action,
       rule: matchedRule
     };
-  }, [isAttackActive]);
+  }, [isAttackActive, activeScenario]);
 
   // Record packet hit to rule table and sync with backend
   const recordPacketHit = useCallback((matchedRuleId, pktLen) => {
@@ -504,14 +522,19 @@ export default function App() {
   const inspectPacketForThreats = useCallback((pkt) => {
     if (!pkt) return;
 
-    const isAttackIp = pkt.srcIp === '192.168.1.105' || pkt.srcIp === '45.154.255.89' || pkt.srcIp === '185.220.101.5';
+    const isAttackIp =
+      pkt.srcIp === '192.168.1.105' ||
+      pkt.srcIp === '45.154.255.89' ||
+      pkt.srcIp === '185.220.101.5' ||
+      pkt.srcIp === '194.26.29.112' ||
+      (activeScenario && pkt.srcIp === activeScenario.attackerIp);
     const isSynScan = pkt.proto && pkt.proto.includes('SYN');
     const sensitivePorts = [21, 22, 23, 25, 135, 445, 1433, 3389];
 
     if (isAttackIp || (isSynScan && sensitivePorts.includes(pkt.dstPort)) || (isAttackActive && Math.random() > 0.3)) {
-      let vector = 'TCP SYN Flood (DDoS)';
-      let signatureId = 'ET-DOS-SYNFLOOD';
-      let severity = 'CRITICAL';
+      let vector = activeScenario?.name || 'TCP SYN Flood (DDoS)';
+      let signatureId = `ET-${activeScenario?.id?.toUpperCase() || 'DOS-SYNFLOOD'}`;
+      let severity = activeScenario?.severity || 'CRITICAL';
 
       if (pkt.dstPort === 22) {
         vector = 'SSH Credential Brute-Force';
@@ -526,15 +549,19 @@ export default function App() {
         signatureId = 'ET-EXPLOIT-SMB-PROBE';
         severity = 'CRITICAL';
       } else if (pkt.dstPort === 80 || pkt.dstPort === 8080) {
-        vector = isSynScan ? 'HTTP Service Flooding' : 'Web SQLi / Directory Traversal Scan';
-        signatureId = isSynScan ? 'ET-DOS-HTTP-FLOOD' : 'ET-WEB-SQLI-SCAN';
-        severity = isSynScan ? 'HIGH' : 'MEDIUM';
+        vector = pkt.proto?.includes('HTTP')
+          ? 'HTTP Layer 7 GET Flood'
+          : isSynScan
+            ? 'HTTP Port 80 SYN Flooding'
+            : 'Web SQLi / Directory Traversal Scan';
+        signatureId = pkt.proto?.includes('HTTP') ? 'ET-DOS-HTTP-FLOOD' : 'ET-WEB-SQLI-SCAN';
+        severity = pkt.proto?.includes('HTTP') ? 'CRITICAL' : 'MEDIUM';
       } else if (pkt.dstPort === 53) {
         vector = 'DNS Amplification Reflection Query';
         signatureId = 'ET-DNS-AMPLIFY';
         severity = 'MEDIUM';
       } else if ([21, 23, 25, 1433].includes(pkt.dstPort)) {
-        vector = 'Reconnaissance / Service Port Scan';
+        vector = 'Horizontal / Vertical Port Reconnaissance';
         signatureId = 'ET-SCAN-PORTSWEEP';
         severity = 'HIGH';
       }
@@ -573,13 +600,149 @@ export default function App() {
         return [newThreat, ...prev.slice(0, 49)];
       });
     }
-  }, [isAttackActive]);
+  }, [isAttackActive, activeScenario]);
+
+  // Evaluate incoming packet against configured firewall policies
+  const evaluatePacketAgainstRules = useCallback((srcIp, dstIp, dstPort, proto) => {
+    let action = 'ALLOW';
+    let matchedRule = 'DEFAULT';
+
+    const currentRules = rulesRef.current;
+    const match = currentRules.find((r) => {
+      if (r.status !== 'ACTIVE') return false;
+      const ipMatch = r.ip === '0.0.0.0/0' || r.ip === srcIp || r.ip === dstIp;
+      const portMatch = r.port === '*' || r.port === 'ANY' || String(r.port) === String(dstPort);
+      const protoMatch = r.protocol === 'ALL' || r.protocol === proto || (proto && proto.includes(r.protocol));
+      return ipMatch && portMatch && protoMatch;
+    });
+
+    if (match) {
+      action = match.action;
+      matchedRule = match.id;
+    }
+
+    return { action, matchedRule };
+  }, []);
+
+  // Ingest Real Live Network Packet from Backend Sniffer Bridge
+  const handleLiveNetworkPacket = useCallback(
+    (rawPkt) => {
+      if (!rawPkt || !rawPkt.srcIp) return;
+
+      const { action, matchedRule } = evaluatePacketAgainstRules(
+        rawPkt.srcIp,
+        rawPkt.dstIp || '192.168.1.1',
+        rawPkt.dstPort || 443,
+        rawPkt.proto || 'TCP'
+      );
+
+      const now = new Date();
+      const timeStr = `${now.toTimeString().split(' ')[0]}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+
+      const pkt = {
+        id: rawPkt.id ? `NET-${rawPkt.id}` : `NET-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        time: rawPkt.time || timeStr,
+        proto: rawPkt.proto || 'TCP',
+        srcIp: rawPkt.srcIp,
+        srcPort: rawPkt.srcPort || 0,
+        dstIp: rawPkt.dstIp || '192.168.1.1',
+        dstPort: rawPkt.dstPort || 443,
+        len: rawPkt.len || 64,
+        ttl: rawPkt.ttl || 64,
+        action,
+        rule: matchedRule,
+        source: rawPkt.source || 'LIVE_INTERFACE'
+      };
+
+      if (matchedRule && matchedRule !== 'DEFAULT') {
+        recordPacketHit(matchedRule, pkt.len);
+      }
+
+      inspectPacketForThreats(pkt);
+
+      setLogs((prev) => [...prev.slice(-60), pkt]);
+
+      setThroughput((prev) => {
+        const delta = (pkt.len * 8) / (1024 * 1024);
+        return parseFloat((prev * 0.85 + delta * 3.0).toFixed(2));
+      });
+      setPacketRate((prev) => Math.min(260000, Math.floor(prev * 0.95 + 2200)));
+    },
+    [evaluatePacketAgainstRules, recordPacketHit, inspectPacketForThreats]
+  );
+
+  // Connect to SSE Live Packet Stream when in 'live' Network Mode
+  useEffect(() => {
+    if (trafficMode !== 'live' || !isLoggedIn) return;
+
+    let eventSource = null;
+    let retryTimer = null;
+
+    function connectBridge() {
+      try {
+        const streamUrl = api.getSseStreamUrl();
+        eventSource = new EventSource(streamUrl);
+
+        eventSource.onopen = () => {
+          setSnifferStatus({ connected: true, interface: 'Scanning Network Interface...' });
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'handshake') {
+              setSnifferStatus({ connected: true, interface: data.interface || 'Host Sockets' });
+            } else if (data.srcIp) {
+              handleLiveNetworkPacket(data);
+            }
+          } catch (e) {
+            console.warn('SSE Parse Error:', e);
+          }
+        };
+
+        eventSource.onerror = () => {
+          setSnifferStatus({ connected: false, interface: 'Backend Bridge Offline' });
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          retryTimer = setTimeout(connectBridge, 4000);
+        };
+      } catch (err) {
+        setSnifferStatus({ connected: false, interface: 'Disconnected' });
+        retryTimer = setTimeout(connectBridge, 4000);
+      }
+    }
+
+    connectBridge();
+
+    return () => {
+      if (eventSource) eventSource.close();
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [trafficMode, isLoggedIn, handleLiveNetworkPacket]);
+
+  // Open Sentinel AI Analyst with custom forensic query (e.g. from Geo Tracker)
+  const handleOpenAiQuery = useCallback((query) => {
+    setAiAnalystQuery(query);
+    setIsAiAnalystOpen(true);
+  }, []);
 
   // Terminal Live Stream loop
   useEffect(() => {
-    if (!isLoggedIn || isTerminalPaused) return;
+    if (!isLoggedIn || isTerminalPaused || trafficMode === 'live') return;
 
-    const intervalMs = isAttackActive ? 700 : 1800;
+    let intervalMs = 1800;
+    if (isAttackActive) {
+      if (activeScenario?.intensity === 'aggressive') {
+        intervalMs = 450;
+      } else if (activeScenario?.intensity === 'moderate') {
+        intervalMs = 850;
+      } else {
+        intervalMs = 600;
+      }
+    }
+
     const interval = setInterval(() => {
       const newPkt = generatePacket();
       setLogs((prev) => [...prev.slice(-60), newPkt]);
@@ -589,7 +752,7 @@ export default function App() {
     }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [isLoggedIn, isTerminalPaused, isAttackActive, generatePacket, recordPacketHit, inspectPacketForThreats]);
+  }, [isLoggedIn, isTerminalPaused, isAttackActive, activeScenario, generatePacket, recordPacketHit, inspectPacketForThreats]);
 
   // Auto-scroll inside terminal container ONLY
   useEffect(() => {
@@ -604,11 +767,25 @@ export default function App() {
 
     const interval = setInterval(() => {
       const currentLogs = logsRef.current;
-      const baseThroughput = isAttackActive ? 4.92 : 2.41;
+      let baseThroughput = 2.41;
+      let basePackets = 149500;
+
+      if (isAttackActive) {
+        if (activeScenario?.intensity === 'aggressive') {
+          baseThroughput = 7.18;
+          basePackets = 425000;
+        } else if (activeScenario?.intensity === 'moderate') {
+          baseThroughput = 3.85;
+          basePackets = 220000;
+        } else {
+          baseThroughput = 5.34;
+          basePackets = 295000;
+        }
+      }
+
       const jitterT = Number((baseThroughput + (Math.random() * 0.3 - 0.15)).toFixed(2));
       setThroughput(jitterT);
 
-      const basePackets = isAttackActive ? 285000 : 149500;
       const jitterP = Math.floor(basePackets + (Math.random() * 10000 - 5000));
       setPacketRate(jitterP);
 
@@ -727,43 +904,60 @@ export default function App() {
   };
 
   // -------------------------------------------------------------
-  // Attack Simulation On/Off Toggle
+  // Live Attack Simulation Handlers
   // -------------------------------------------------------------
+  const handleStartAttackScenario = (scenarioConfig) => {
+    const config = scenarioConfig || ATTACK_SCENARIOS[0];
+    setActiveScenario(config);
+    setIsAttackActive(true);
+
+    const alertTime = new Date().toTimeString().split(' ')[0];
+    setCriticalAlert({
+      id: Date.now(),
+      ip: config.attackerIp,
+      title: `Critical Alert: ${config.name} Detected from ${config.attackerIp}`,
+      vector: `${config.name} (Target: Port ${config.targetPort})`,
+      rate: `${config.defaultPps || 2480} probes/sec threshold exceeded`
+    });
+
+    // Log initial threat signature event into threat feed
+    const initialThreat = {
+      id: `THR-${Date.now().toString().slice(-4)}`,
+      time: alertTime,
+      timestamp: Date.now(),
+      attackerIp: config.attackerIp,
+      targetPort: config.targetPort,
+      protocol: config.protocol,
+      vector: config.name,
+      signatureId: `ET-${config.id.toUpperCase()}-CRIT`,
+      severity: config.severity || 'CRITICAL',
+      confidence: 99,
+      packetCount: config.defaultPps || 2480
+    };
+    setThreatEvents((prev) => [initialThreat, ...prev.slice(0, 49)]);
+
+    setToastNotification({
+      title: 'Attack Simulation Deployed',
+      desc: `Transmitting simulated ${config.name} from ${config.attackerIp}.`
+    });
+    setTimeout(() => setToastNotification(null), 3500);
+  };
+
+  const handleStopAttack = () => {
+    setIsAttackActive(false);
+    setCriticalAlert(null);
+    setToastNotification({
+      title: 'Attack Simulation Halted',
+      desc: 'All packet injection stopped. Telemetry restored to normal operational baseline.'
+    });
+    setTimeout(() => setToastNotification(null), 3000);
+  };
+
   const handleToggleAttack = () => {
     if (isAttackActive) {
-      setIsAttackActive(false);
-      setCriticalAlert(null);
-      setToastNotification({
-        title: 'Attack Simulation Stopped',
-        desc: 'Network traffic rate and packet inspection restored to normal baseline.'
-      });
-      setTimeout(() => setToastNotification(null), 3000);
+      handleStopAttack();
     } else {
-      setIsAttackActive(true);
-      const alertTime = new Date().toTimeString().split(' ')[0];
-      setCriticalAlert({
-        id: Date.now(),
-        ip: '192.168.1.105',
-        title: 'Critical Alert: Potential Port Scan / DDoS Detected from IP 192.168.1.105',
-        vector: 'TCP SYN Flood / Port Scan (Ports 21-8080)',
-        rate: '2,480 probes/sec threshold exceeded'
-      });
-
-      // Log initial high-priority signature into threat feed
-      const initialThreat = {
-        id: `THR-${Date.now().toString().slice(-4)}`,
-        time: alertTime,
-        timestamp: Date.now(),
-        attackerIp: '192.168.1.105',
-        targetPort: 'MULTI',
-        protocol: 'TCP [SYN]',
-        vector: 'TCP SYN Flood / Port Scan (Ports 21-8080)',
-        signatureId: 'ET-DOS-SYNFLOOD-CRITICAL',
-        severity: 'CRITICAL',
-        confidence: 99,
-        packetCount: 2480
-      };
-      setThreatEvents((prev) => [initialThreat, ...prev.slice(0, 49)]);
+      setIsAttackConsoleOpen(true);
     }
   };
 
@@ -902,6 +1096,7 @@ export default function App() {
         totalPkts={totalPkts}
         rulesCount={rules.length}
         threatsCount={threatEvents.filter((t) => !rules.some((r) => r.ip === t.attackerIp && r.action === 'DROP' && r.status === 'ACTIVE')).length}
+        geoNodesCount={logs.length > 0 ? Math.min(15, new Set(logs.map((l) => l.srcIp)).size) : 8}
         onLogout={handleLogout}
         currentUser={username || (authTab === 'firebase' && firebaseEmail ? firebaseEmail.split('@')[0] : 'SecOps Admin')}
       />
@@ -913,8 +1108,13 @@ export default function App() {
           isDarkMode={isDarkMode}
           setIsDarkMode={setIsDarkMode}
           activeView={activeView}
+          trafficMode={trafficMode}
+          setTrafficMode={setTrafficMode}
+          snifferStatus={snifferStatus}
           isAttackActive={isAttackActive}
           onToggleAttack={handleToggleAttack}
+          onOpenAttackConsole={() => setIsAttackConsoleOpen(true)}
+          onOpenAiAnalyst={() => setIsAiAnalystOpen((prev) => !prev)}
           exportOpen={exportOpen}
           setExportOpen={setExportOpen}
           onExport={handleExport}
@@ -976,6 +1176,17 @@ export default function App() {
             />
           )}
 
+          {activeView === 'geo' && (
+            <IpGeoTrackerView
+              isDarkMode={isDarkMode}
+              logs={logs}
+              threatEvents={threatEvents}
+              rules={rules}
+              onAutoBlock={handleAutoBlock}
+              onOpenAiQuery={handleOpenAiQuery}
+            />
+          )}
+
           {activeView === 'rules' && (
             <PolicyRulesView
               isDarkMode={isDarkMode}
@@ -1006,6 +1217,34 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Live Attack Simulation Console Modal */}
+      <AttackSimulationConsole
+        isOpen={isAttackConsoleOpen}
+        onClose={() => setIsAttackConsoleOpen(false)}
+        isDarkMode={isDarkMode}
+        isAttackActive={isAttackActive}
+        activeScenario={activeScenario}
+        onStartAttack={handleStartAttackScenario}
+        onStopAttack={handleStopAttack}
+      />
+
+      {/* Sentinel AI Analyst & Forensic Chatbot Widget / Drawer */}
+      <SentinelAiAnalyst
+        isOpen={isAiAnalystOpen}
+        onToggle={() => setIsAiAnalystOpen((prev) => !prev)}
+        isDarkMode={isDarkMode}
+        logs={logs}
+        rules={rules}
+        threatEvents={threatEvents}
+        isAttackActive={isAttackActive}
+        activeScenario={activeScenario}
+        throughput={throughput}
+        packetRate={packetRate}
+        onAutoBlock={handleAutoBlock}
+        externalQuery={aiAnalystQuery}
+        onClearExternalQuery={() => setAiAnalystQuery(null)}
+      />
     </div>
   );
 }
