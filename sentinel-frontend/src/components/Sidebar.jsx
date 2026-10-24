@@ -15,7 +15,8 @@ export default function Sidebar({
   isAttackActive,
   totalPkts,
   rulesCount,
-  onLogout
+  onLogout,
+  currentUser = 'Administrator'
 }) {
   return (
     <aside
@@ -155,11 +156,11 @@ export default function Sidebar({
       >
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
-            A
+            {currentUser ? currentUser.charAt(0).toUpperCase() : 'A'}
           </div>
           <div className="overflow-hidden">
-            <span className="text-xs font-semibold block truncate">admin@sentinel</span>
-            <span className="text-[10px] text-slate-400 block">SecOps Engineer</span>
+            <span className="text-xs font-semibold block truncate">{currentUser || 'Administrator'}</span>
+            <span className="text-[10px] text-slate-400 block">SecOps Console</span>
           </div>
         </div>
 
