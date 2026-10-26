@@ -447,20 +447,61 @@ export default function IpGeoTracker({
               </linearGradient>
             </defs>
 
-            {/* Simplified World Continents Geo Vector Outlines */}
-            <g fill="#1e293b" stroke="#334155" strokeWidth="0.8" opacity="0.6">
-              {/* North America */}
-              <path d="M120,70 L210,65 L270,105 L260,165 L210,185 L180,210 L155,175 L110,150 L95,110 Z" />
+            {/* High-Fidelity Cyber World Continents Geo Vector Canvas */}
+            <g fill="#1e293b" stroke="#334155" strokeWidth="0.8" opacity="0.75" className="transition-colors">
+              {/* North America & Canada */}
+              <path d="M70,55 L130,45 L175,40 L220,45 L255,60 L285,85 L275,115 L245,135 L260,165 L225,185 L180,215 L160,225 L145,190 L120,180 L90,145 L75,100 Z" />
+              {/* Greenland */}
+              <path d="M290,30 L345,25 L365,55 L320,80 L285,60 Z" />
+              {/* Central America & Caribbean */}
+              <path d="M160,225 L185,240 L210,255 L200,265 L175,255 L155,235 Z" />
               {/* South America */}
-              <path d="M225,230 L270,240 L300,310 L260,390 L235,395 L215,310 L210,250 Z" />
-              {/* Europe */}
-              <path d="M430,75 L490,70 L520,110 L480,140 L430,135 L420,100 Z" />
+              <path d="M205,260 L245,255 L285,275 L310,320 L290,370 L260,420 L235,425 L215,360 L195,300 L190,270 Z" />
+              {/* British Isles */}
+              <path d="M420,80 L435,75 L440,95 L425,105 Z M410,90 L420,88 L418,102 L408,100 Z" />
+              {/* Western & Eastern Europe */}
+              <path d="M435,95 L480,80 L520,75 L540,110 L515,130 L480,140 L445,145 L435,120 Z" />
+              {/* Scandinavia */}
+              <path d="M465,40 L495,35 L510,65 L480,80 L465,60 Z" />
               {/* Africa */}
-              <path d="M430,155 L510,160 L540,240 L490,340 L450,330 L415,230 L410,170 Z" />
-              {/* Asia */}
-              <path d="M530,70 L720,75 L790,140 L730,220 L660,240 L580,180 L520,120 Z" />
+              <path d="M425,150 L515,145 L545,210 L540,270 L500,350 L465,365 L445,340 L420,240 L405,185 Z" />
+              {/* Madagascar */}
+              <path d="M555,305 L570,315 L560,355 L545,345 Z" />
+              {/* Russia & Northern Asia */}
+              <path d="M525,75 L620,60 L720,55 L810,65 L840,95 L795,130 L720,135 L620,130 L540,110 Z" />
+              {/* Middle East */}
+              <path d="M515,145 L565,150 L585,195 L550,215 L525,185 Z" />
+              {/* South Asia / India */}
+              <path d="M585,160 L645,165 L660,215 L625,265 L600,240 L585,195 Z" />
+              {/* East Asia & China */}
+              <path d="M625,130 L745,135 L770,180 L735,230 L665,225 L635,175 Z" />
+              {/* Southeast Asia */}
+              <path d="M690,225 L735,235 L725,275 L695,265 Z" />
+              {/* Japan Archipelago */}
+              <path d="M790,135 L815,150 L805,185 L785,175 Z" />
               {/* Australia */}
-              <path d="M720,290 L790,295 L805,360 L740,375 L710,340 Z" />
+              <path d="M710,295 L785,290 L825,335 L800,395 L745,400 L705,360 L695,320 Z" />
+              {/* New Zealand */}
+              <path d="M845,385 L865,395 L850,430 L835,420 Z" />
+            </g>
+
+            {/* Coordinate Grid & Radar Reticles */}
+            <g stroke="#3b82f6" strokeWidth="0.5" strokeDasharray="3,6" opacity="0.25">
+              {/* Equator & Parallels */}
+              <line x1="0" y1="225" x2="900" y2="225" />
+              <line x1="0" y1="112" x2="900" y2="112" />
+              <line x1="0" y1="337" x2="900" y2="337" />
+              {/* Meridians */}
+              <line x1="225" y1="0" x2="225" y2="450" />
+              <line x1="450" y1="0" x2="450" y2="450" />
+              <line x1="675" y1="0" x2="675" y2="450" />
+            </g>
+
+            {/* Radar Range Rings Radiating from Sentinel Gateway */}
+            <g stroke="#3b82f6" strokeWidth="0.6" strokeDasharray="2,4" opacity="0.3">
+              <circle cx={hostProjected.x} cy={hostProjected.y} r="60" fill="none" />
+              <circle cx={hostProjected.x} cy={hostProjected.y} r="140" fill="none" />
+              <circle cx={hostProjected.x} cy={hostProjected.y} r="240" fill="none" />
             </g>
 
             {/* Attack & Traffic Arcs from Origin to Firewall Host */}

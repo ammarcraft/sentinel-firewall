@@ -22,6 +22,7 @@ export default function App() {
 
   // View State: Controlled by Left Sidebar ('monitor' | 'rules')
   const [activeView, setActiveView] = useState('monitor');
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   // Authentication & FIDO2 Verification State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -208,20 +209,24 @@ export default function App() {
   const handlePasswordSubmit = (e) => {
     if (e) e.preventDefault();
 
-    if (!username.trim() || !password.trim()) {
+    const cleanUser = (username || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    if (!cleanUser || !cleanPass) {
       alert('⚠️ Please enter both Administrator ID and Password.');
       return;
     }
 
-    if (username !== 'Ammar' || password !== 'hackAMR') {
-      alert('❌ Access Denied: Invalid Username or Password!');
+    if (cleanUser !== 'ammar' || cleanPass !== 'hackAMR') {
+      alert('❌ Access Denied: Invalid Username or Password! Use username "Ammar" and password "hackAMR".');
       return;
     }
 
+    setUsername('Ammar');
     setIsLoggedIn(true);
     setToastNotification({
       title: 'Admin Session Authenticated',
-      desc: `Administrator ${username} authenticated successfully.`
+      desc: 'Administrator Ammar authenticated successfully.'
     });
     setTimeout(() => setToastNotification(null), 4000);
   };
@@ -728,19 +733,15 @@ export default function App() {
     setIsAiAnalystOpen(true);
   }, []);
 
-  // Terminal Live Stream loop
+  // Terminal Live Stream loop - Only transmits simulated frames when an attack vector is explicitly triggered
   useEffect(() => {
-    if (!isLoggedIn || isTerminalPaused || trafficMode === 'live') return;
+    if (!isLoggedIn || isTerminalPaused || !isAttackActive) return;
 
-    let intervalMs = 1800;
-    if (isAttackActive) {
-      if (activeScenario?.intensity === 'aggressive') {
-        intervalMs = 450;
-      } else if (activeScenario?.intensity === 'moderate') {
-        intervalMs = 850;
-      } else {
-        intervalMs = 600;
-      }
+    let intervalMs = 600;
+    if (activeScenario?.intensity === 'aggressive') {
+      intervalMs = 400;
+    } else if (activeScenario?.intensity === 'moderate') {
+      intervalMs = 850;
     }
 
     const interval = setInterval(() => {
@@ -1087,27 +1088,35 @@ export default function App() {
         isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'
       }`}
     >
-      {/* 1. Left Navigation Sidebar */}
-      <Sidebar
-        isDarkMode={isDarkMode}
-        activeView={activeView}
-        setActiveView={setActiveView}
-        isAttackActive={isAttackActive}
-        totalPkts={totalPkts}
-        rulesCount={rules.length}
-        threatsCount={threatEvents.filter((t) => !rules.some((r) => r.ip === t.attackerIp && r.action === 'DROP' && r.status === 'ACTIVE')).length}
-        geoNodesCount={logs.length > 0 ? Math.min(15, new Set(logs.map((l) => l.srcIp)).size) : 8}
-        onLogout={handleLogout}
-        currentUser={username || (authTab === 'firebase' && firebaseEmail ? firebaseEmail.split('@')[0] : 'SecOps Admin')}
-      />
+      {/* 1. Left Navigation Sidebar (Can be toggled via 3-line hamburger menu) */}
+      {isSidebarVisible && (
+        <Sidebar
+          isDarkMode={isDarkMode}
+          activeView={activeView}
+          setActiveView={setActiveView}
+          isAttackActive={isAttackActive}
+          totalPkts={totalPkts}
+          rulesCount={rules.length}
+          threatsCount={threatEvents.filter((t) => !rules.some((r) => r.ip === t.attackerIp && r.action === 'DROP' && r.status === 'ACTIVE')).length}
+          geoNodesCount={logs.length > 0 ? Math.min(15, new Set(logs.map((l) => l.srcIp)).size) : 6}
+          onLogout={handleLogout}
+          currentUser={username || (authTab === 'firebase' && firebaseEmail ? firebaseEmail.split('@')[0] : 'Ammar')}
+        />
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Navbar */}
+        {/* Top Navbar with 3-Line Hamburger Dropdown Menu */}
         <Navbar
           isDarkMode={isDarkMode}
           setIsDarkMode={setIsDarkMode}
           activeView={activeView}
+          setActiveView={setActiveView}
+          onToggleSidebar={() => setIsSidebarVisible((prev) => !prev)}
+          totalPkts={totalPkts}
+          threatsCount={threatEvents.length}
+          rulesCount={rules.length}
+          geoNodesCount={logs.length > 0 ? Math.min(15, new Set(logs.map((l) => l.srcIp)).size) : 6}
           trafficMode={trafficMode}
           setTrafficMode={setTrafficMode}
           snifferStatus={snifferStatus}
@@ -1115,9 +1124,6 @@ export default function App() {
           onToggleAttack={handleToggleAttack}
           onOpenAttackConsole={() => setIsAttackConsoleOpen(true)}
           onOpenAiAnalyst={() => setIsAiAnalystOpen((prev) => !prev)}
-          exportOpen={exportOpen}
-          setExportOpen={setExportOpen}
-          onExport={handleExport}
         />
 
         {/* IDS Critical Alert Toast / Banner */}
