@@ -20,6 +20,15 @@ export default function App() {
   // Theme State: Default is Light Mode
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Sync Dark Mode class with root document for Tailwind compatibility
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   // View State: Controlled by Left Sidebar ('monitor' | 'rules')
   const [activeView, setActiveView] = useState('monitor');
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
