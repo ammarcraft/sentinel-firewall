@@ -511,71 +511,150 @@ def build_academic_docx(output_path, rep_dir):
         "The Sentinel user interface is engineered as a high-contrast, tactical Security Operations Center (SOC) dashboard built in React 19 and styled with Tailwind CSS. The figures below document the implemented views with actual captured system screenshots and reference placeholders."
     )
 
-    doc.add_heading("4.1 Administrator Authentication & Command Center", level=2)
+    doc.add_heading("4.1 Administrator Authentication & Access Portal", level=2)
+    p_auth_desc = doc.add_paragraph()
+    p_auth_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_auth_desc.paragraph_format.line_spacing = 1.2
+    p_auth_desc.paragraph_format.space_after = Pt(4)
+    p_auth_desc.add_run(
+        "To guarantee role-based access control (RBAC) and prevent unauthorized modification of netfilter security policies, Sentinel implements a hardened administrative authentication portal. Access requires credential validation against pre-configured SecOps cryptographic tokens before initializing the tactical telemetry stream. Figure 2 displays the administrative authentication screen."
+    )
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "fig2_login.png"),
+        os.path.join(rep_dir, "ss_login.png"),
         "Administrator Authentication Screen",
         "Administrator login screen with ID 'Ammar' and passphrase authentication.",
         "Fig 2 : Administrator Authentication & Security Access Portal",
-        width_in=4.2
+        width_in=3.4
     )
 
-    doc.add_heading("4.2 Live Traffic Terminal with Continuous Sequential Stream", level=2)
-    add_image_or_placeholder(
-        doc,
-        os.path.join(rep_dir, "fig3_terminal.png"),
-        "Live Traffic Terminal Feed",
-        "Real-time packet logs streaming one-by-one with green [ALLOW] and red [DROP] verdicts.",
-        "Fig 3 : Live Traffic Terminal Streaming Real-Time Packets",
-        width_in=4.6
-    )
+    doc.add_page_break()
 
-    doc.add_heading("4.3 Firewall Policy & Rule Enforcement Manager", level=2)
-    add_image_or_placeholder(
-        doc,
-        os.path.join(rep_dir, "fig4_rules.png"),
-        "Firewall Policy & Rule Manager Table",
-        "Configured firewall rules synced with MySQL database with real-time hit and byte counters.",
-        "Fig 4 : Firewall Policy & Rule Enforcement Manager Table",
-        width_in=5.5
+    doc.add_heading("4.2 Sentinel Command Center & Overall Live Dashboard", level=2)
+    p_dash_desc = doc.add_paragraph()
+    p_dash_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_dash_desc.paragraph_format.line_spacing = 1.2
+    p_dash_desc.paragraph_format.space_after = Pt(4)
+    p_dash_desc.add_run(
+        "Upon successful authentication, the administrator is presented with the unified Command Center. The tactical HUD synthesizes high-velocity telemetry, packet throughput gauges, engine health monitors, and a live sequential packet log stream. Packets are evaluated against the active netfilter chain, rendering deterministic green [ALLOW] or red [DROP] verdicts in real time. Figure 3 shows the comprehensive dashboard view."
     )
-
-    doc.add_heading("4.4 Global IP Geolocation Threat Radar Map", level=2)
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "fig5_geomap.png"),
-        "IP Geolocation Threat Radar Map",
-        "Geopolitical world map with trajectory arcs and geolocated ingress origin nodes.",
-        "Fig 5 : Global IP Geolocation Threat Radar Map & Origins Inventory",
+        os.path.join(rep_dir, "ss_dashboard.png"),
+        "Sentinel Command Center Dashboard",
+        "Complete dashboard with real-time throughput metrics, live packet terminal, and engine controls.",
+        "Fig 3 : Sentinel Command Center Dashboard (Live Telemetry & Traffic Stream)",
         width_in=5.8
     )
 
-    doc.add_heading("4.5 Network Topology Mesh Graph (Interactive Draggable Nodes)", level=2)
+    doc.add_page_break()
+
+    doc.add_heading("4.3 Interactive Network Topology Mesh Graph (Draggable Nodes & Dynamic Bézier Curves)", level=2)
+    p_topo_desc = doc.add_paragraph()
+    p_topo_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_topo_desc.paragraph_format.line_spacing = 1.2
+    p_topo_desc.paragraph_format.space_after = Pt(4)
+    p_topo_desc.add_run(
+        "The interactive Network Topology Mesh Graph visualizes packet flows across spatial coordinates. The central Sentinel Core is dynamically linked to external threat actors via red dashed arcs and to authorized clients via green arcs. Protected internal assets—including MySQL databases, DMZ gateways, and web daemons—are encapsulated within the perimeter. Operators can freely reposition nodes via pointer drag-and-drop; dynamic cubic Bézier vectors recalculate in real time to maintain smooth vector arcs. Figure 4 showcases the draggable topology graph."
+    )
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "fig_topology.png"), # placeholder if not yet provided
+        os.path.join(rep_dir, "ss_topology.png"),
         "Network Topology Mesh Graph",
-        "Shows the Central Sentinel Core hub, connected attacker nodes (red dashed curves), allowed transit nodes (green curves), and internal LAN servers (Database, Web Server, Gateway).",
-        "Fig 6 : Interactive Network Topology Mesh Graph with Draggable Nodes"
+        "Interactive SVG mesh with central Sentinel hub, draggable nodes, and animated packet trajectories.",
+        "Fig 4 : Interactive Network Topology Mesh Graph with Draggable Nodes & Dynamic Bézier Curves",
+        width_in=5.8
     )
 
-    doc.add_heading("4.6 Live Attack Simulation Console & Critical Banner", level=2)
+    doc.add_page_break()
+
+    doc.add_heading("4.4 Heuristic Intrusion Detection System (IDS) Engine & Live Threat Feed", level=2)
+    p_ids_desc = doc.add_paragraph()
+    p_ids_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_ids_desc.paragraph_format.line_spacing = 1.2
+    p_ids_desc.paragraph_format.space_after = Pt(4)
+    p_ids_desc.add_run(
+        "The Intrusion Detection System inspects incoming traffic against known adversarial patterns, such as TCP SYN Floods (MITRE ATT&CK T1498.001), horizontal port sweeps, and SSH/RDP brute force attempts. The threat intelligence console ranks alerts by severity, tallies frequency histograms, and provides 1-click 'Auto-Block IP' controls that immediately commit dynamic DROP rules to the policy engine. Figure 5 depicts the IDS threat intelligence console."
+    )
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "fig_attack.png"),
-        "Attack Simulation Console & Threat Banner",
-        "Attack simulation modal executing a TCP SYN Flood DDoS from 192.168.1.105 with top red Critical Alert Banner.",
-        "Fig 7 : Live Attack Simulation Console & Critical Threat Banner"
+        os.path.join(rep_dir, "ss_ids.png"),
+        "Intrusion Detection System (IDS) Feed",
+        "Real-time threat feed, attack severity breakdown, and automated mitigation controls.",
+        "Fig 5 : Heuristic Intrusion Detection System (IDS) Engine & Threat Intelligence Feed",
+        width_in=5.8
     )
 
-    doc.add_heading("4.7 Sentinel AI Analyst & Forensic Chatbot", level=2)
+    doc.add_page_break()
+
+    doc.add_heading("4.5 Firewall Policy & Dynamic Filtering Rules Engine (MySQL Synced)", level=2)
+    p_rule_desc = doc.add_paragraph()
+    p_rule_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_rule_desc.paragraph_format.line_spacing = 1.2
+    p_rule_desc.paragraph_format.space_after = Pt(4)
+    p_rule_desc.add_run(
+        "The Firewall Policy Manager enables granular Layer 4 rule configuration, supporting Source IP, Destination Port, Protocol (TCP/UDP/ICMP), and Action (ALLOW/DROP). Policies are synchronized with a backend MySQL database ('firewall_db'), maintaining persistent hit counters and bandwidth tallies across reboots. Figure 6 displays the configured rules table with real-time hit counts."
+    )
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "fig_ai.png"),
-        "Sentinel AI Analyst Forensic Copilot",
-        "Interactive forensic chat drawer with root-cause explanations and 1-click 'Commit DROP Rule' buttons.",
-        "Fig 8 : Sentinel AI Analyst Interactive Forensic Chatbot"
+        os.path.join(rep_dir, "ss_rules.png"),
+        "Firewall Policy & Rule Manager Table",
+        "Configured firewall rules synced with MySQL database with real-time hit and byte counters.",
+        "Fig 6 : Firewall Policy & Dynamic Filtering Rules Engine (MySQL Persistent)",
+        width_in=5.8
+    )
+
+    doc.add_heading("4.6 Global IP Geolocation Threat Radar Map", level=2)
+    p_geo_desc = doc.add_paragraph()
+    p_geo_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_geo_desc.paragraph_format.line_spacing = 1.2
+    p_geo_desc.paragraph_format.space_after = Pt(4)
+    p_geo_desc.add_run(
+        "The Global IP Geolocation Threat Radar maps packet ingress origins onto a world map projection. Trajectory vectors radiate from geographic centers (e.g. Frankfurt, Beijing, Moscow, Mumbai) toward the protected server cluster. The view features origin flag badges, IP coordinates, and city-level geolocations. Figure 7 illustrates the global threat radar map."
+    )
+    add_image_or_placeholder(
+        doc,
+        os.path.join(rep_dir, "ss_geomap.png"),
+        "IP Geolocation Threat Radar Map",
+        "Geopolitical world map with trajectory arcs and geolocated ingress origin nodes.",
+        "Fig 7 : Global IP Geolocation Threat Radar Map & Origins Inventory",
+        width_in=5.8
+    )
+
+    doc.add_page_break()
+
+    doc.add_heading("4.7 Live Adversary Attack Simulation Console & Critical Alert Banner", level=2)
+    p_atk_desc = doc.add_paragraph()
+    p_atk_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_atk_desc.paragraph_format.line_spacing = 1.2
+    p_atk_desc.paragraph_format.space_after = Pt(4)
+    p_atk_desc.add_run(
+        "The integrated Adversary Attack Simulation Console allows security personnel to launch authentic cyber-threat vectors on demand—including high-velocity TCP SYN floods and port reconnaissance—surging traffic to over 50 packets per second to validate drop rule enforcement and trigger the top Critical Alert Banner. Figure 8 designates the slot for the active attack simulation console."
+    )
+    add_image_or_placeholder(
+        doc,
+        os.path.join(rep_dir, "ss_attack.png"),
+        "Active Attack Simulation Console & Alert Banner",
+        "Capture the Attack Simulation modal active with TCP SYN Flood (DDoS) running from 192.168.1.105 and top red Critical Threat Banner.",
+        "Fig 8 : Live Attack Simulation Console & Critical Threat Banner",
+        width_in=5.8
+    )
+
+    doc.add_heading("4.8 Sentinel AI Analyst & Forensic Copilot Drawer", level=2)
+    p_ai_desc = doc.add_paragraph()
+    p_ai_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_ai_desc.paragraph_format.line_spacing = 1.2
+    p_ai_desc.paragraph_format.space_after = Pt(4)
+    p_ai_desc.add_run(
+        "Operating as an interactive slide-out drawer, the Sentinel AI Analyst consumes live packet telemetry and IDS anomaly logs to perform automated conversational root-cause analysis (RCA), recommending tactical iptables mitigation rules executable with a single click. Figure 9 designates the slot for the Sentinel AI Analyst drawer."
+    )
+    add_image_or_placeholder(
+        doc,
+        os.path.join(rep_dir, "ss_ai.png"),
+        "Sentinel AI Analyst Forensic Drawer",
+        "Capture the Sentinel AI Analyst chat drawer displaying automated incident RCA (Root Cause Analysis) and 1-click 'Commit DROP Rule' action.",
+        "Fig 9 : Sentinel AI Analyst Interactive Forensic Chatbot Drawer",
+        width_in=5.8
     )
 
     doc.add_page_break()
@@ -1213,26 +1292,73 @@ def build_academic_pdf(pdf_path, rep_dir):
                 Spacer(1, 10)
             ])
 
-    story.append(Paragraph("4.1 Administrator Authentication & Command Center", h2_style))
-    story.append(add_pdf_screenshot_block("fig2_login.png", "Administrator Login Screen", "Administrator authentication portal.", "Fig 2 : Administrator Authentication & Security Access Portal", width=4.0*inch, height=2.7*inch))
+    story.append(Paragraph("4.1 Administrator Authentication & Access Portal", h2_style))
+    story.append(Paragraph(
+        "To guarantee role-based access control (RBAC) and prevent unauthorized modification of netfilter security policies, "
+        "Sentinel implements a hardened administrative authentication portal requiring credential validation before exposing the tactical dashboard.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_login.png", "Administrator Login Screen", "Administrator authentication portal.", "Fig 2 : Administrator Authentication & Security Access Portal", width=3.2*inch, height=4.2*inch))
 
-    story.append(Paragraph("4.2 Live Traffic Terminal with Continuous Sequential Stream", h2_style))
-    story.append(add_pdf_screenshot_block("fig3_terminal.png", "Live Traffic Terminal Feed", "Continuous one-by-one packet logs stream with [ALLOW] and [DROP] verdicts.", "Fig 3 : Live Traffic Terminal Streaming Real-Time Packets", width=4.2*inch, height=2.6*inch))
+    story.append(PageBreak())
 
-    story.append(Paragraph("4.3 Firewall Policy & Rule Enforcement Manager", h2_style))
-    story.append(add_pdf_screenshot_block("fig4_rules.png", "Firewall Policy & Rule Manager Table", "Configured firewall rules synced with MySQL database with hit and byte counters.", "Fig 4 : Firewall Policy & Rule Enforcement Manager Table", width=5.6*inch, height=2.6*inch))
+    story.append(Paragraph("4.2 Sentinel Command Center & Overall Live Dashboard", h2_style))
+    story.append(Paragraph(
+        "Upon successful authentication, the administrator is presented with the unified Command Center. The tactical HUD synthesizes "
+        "high-velocity telemetry, packet throughput gauges, engine health monitors, and a live sequential packet log stream with real-time [ALLOW] and [DROP] verdicts.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_dashboard.png", "Sentinel Command Center Dashboard", "Complete dashboard with real-time throughput metrics, live packet terminal, and engine controls.", "Fig 3 : Sentinel Command Center Dashboard (Live Telemetry & Traffic Stream)", width=5.8*inch, height=2.88*inch))
 
-    story.append(Paragraph("4.4 Global IP Geolocation Threat Radar Map", h2_style))
-    story.append(add_pdf_screenshot_block("fig5_geomap.png", "IP Geolocation Threat Radar Map", "Geopolitical world map with trajectory arcs and geolocated ingress origin nodes.", "Fig 5 : Global IP Geolocation Threat Radar Map & Origins Inventory", width=5.8*inch, height=2.2*inch))
+    story.append(PageBreak())
 
-    story.append(Paragraph("4.5 Network Topology Mesh Graph (Interactive Draggable Nodes)", h2_style))
-    story.append(add_pdf_screenshot_block("fig_topology.png", "Network Topology Mesh Graph", "Shows the central Sentinel Core hub, connected attacker nodes (red dashed curves), allowed transit nodes (green curves), and internal LAN servers.", "Fig 6 : Interactive Network Topology Mesh Graph with Draggable Nodes"))
+    story.append(Paragraph("4.3 Interactive Network Topology Mesh Graph (Draggable Nodes & Dynamic Bézier Curves)", h2_style))
+    story.append(Paragraph(
+        "The interactive Network Topology Mesh Graph visualizes packet flows across spatial coordinates. The central Sentinel Core is linked to external threats via red dashed arcs and to authorized clients via green arcs. Operators can freely drag nodes; dynamic cubic Bézier vectors recalculate in real time to maintain smooth curves.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_topology.png", "Network Topology Mesh Graph", "Interactive SVG mesh with central Sentinel hub, draggable nodes, and animated packet trajectories.", "Fig 4 : Interactive Network Topology Mesh Graph with Draggable Nodes & Dynamic Bézier Curves", width=5.8*inch, height=3.32*inch))
 
-    story.append(Paragraph("4.6 Live Attack Simulation Console & Critical Banner", h2_style))
-    story.append(add_pdf_screenshot_block("fig_attack.png", "Attack Simulation Console & Threat Banner", "Attack simulation modal executing a TCP SYN Flood DDoS from 192.168.1.105 with top red Critical Alert Banner.", "Fig 7 : Live Attack Simulation Console & Critical Threat Banner"))
+    story.append(PageBreak())
 
-    story.append(Paragraph("4.7 Sentinel AI Analyst & Forensic Chatbot", h2_style))
-    story.append(add_pdf_screenshot_block("fig_ai.png", "Sentinel AI Analyst Forensic Copilot", "Interactive forensic chat drawer with root-cause explanations and 1-click 'Commit DROP Rule' buttons.", "Fig 8 : Sentinel AI Analyst Interactive Forensic Chatbot"))
+    story.append(Paragraph("4.4 Heuristic Intrusion Detection System (IDS) Engine & Live Threat Feed", h2_style))
+    story.append(Paragraph(
+        "The Intrusion Detection System inspects incoming traffic against known adversarial patterns, such as TCP SYN Floods (MITRE ATT&CK T1498.001), port sweeps, and brute force attempts. The console ranks alerts by severity and provides 1-click 'Auto-Block IP' controls that commit dynamic DROP rules immediately.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_ids.png", "Intrusion Detection System (IDS) Feed", "Real-time threat feed, attack severity breakdown, and automated mitigation controls.", "Fig 5 : Heuristic Intrusion Detection System (IDS) Engine & Threat Intelligence Feed", width=5.8*inch, height=3.32*inch))
+
+    story.append(PageBreak())
+
+    story.append(Paragraph("4.5 Firewall Policy & Dynamic Filtering Rules Engine (MySQL Synced)", h2_style))
+    story.append(Paragraph(
+        "The Firewall Policy Manager enables granular Layer 4 rule configuration (Source IP, Port, Protocol, Action). Policies are synchronized with MySQL ('firewall_db'), maintaining persistent hit counters and byte tallies across reboots.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_rules.png", "Firewall Policy & Rule Manager Table", "Configured firewall rules synced with MySQL database with real-time hit and byte counters.", "Fig 6 : Firewall Policy & Dynamic Filtering Rules Engine (MySQL Persistent)", width=5.8*inch, height=2.85*inch))
+
+    story.append(Paragraph("4.6 Global IP Geolocation Threat Radar Map", h2_style))
+    story.append(Paragraph(
+        "The Global Threat Radar maps packet ingress origins onto a world map projection. Trajectory vectors radiate from geographic centers (Frankfurt, Beijing, Moscow, Mumbai) toward the protected server cluster, featuring origin flags and city-level geolocations.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_geomap.png", "IP Geolocation Threat Radar Map", "Geopolitical world map with trajectory arcs and geolocated ingress origin nodes.", "Fig 7 : Global IP Geolocation Threat Radar Map & Origins Inventory", width=5.8*inch, height=2.0*inch))
+
+    story.append(PageBreak())
+
+    story.append(Paragraph("4.7 Live Adversary Attack Simulation Console & Critical Alert Banner", h2_style))
+    story.append(Paragraph(
+        "The integrated simulation console allows security personnel to launch authentic cyber-threat vectors on demand (TCP SYN Floods, Port Scans), surging traffic to over 50 packets/sec to validate drop enforcement and trigger the top Critical Alert Banner.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_attack.png", "Active Attack Simulation Console & Alert Banner", "Capture the Attack Simulation modal active with TCP SYN Flood (DDoS) running from 192.168.1.105 and top red Critical Threat Banner.", "Fig 8 : Live Attack Simulation Console & Critical Threat Banner", width=5.8*inch, height=1.2*inch))
+
+    story.append(Paragraph("4.8 Sentinel AI Analyst & Forensic Copilot Drawer", h2_style))
+    story.append(Paragraph(
+        "Operating as an interactive slide-out drawer, the Sentinel AI Analyst consumes live telemetry and IDS anomaly logs to perform automated conversational root-cause analysis (RCA), recommending tactical iptables mitigation rules executable with a single click.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_ai.png", "Sentinel AI Analyst Forensic Drawer", "Capture the Sentinel AI Analyst chat drawer displaying automated incident RCA (Root Cause Analysis) and 1-click 'Commit DROP Rule' action.", "Fig 9 : Sentinel AI Analyst Interactive Forensic Chatbot Drawer", width=5.8*inch, height=1.2*inch))
 
     story.append(PageBreak())
 
