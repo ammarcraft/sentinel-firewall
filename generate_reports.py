@@ -168,8 +168,8 @@ def build_academic_docx(output_path, rep_dir):
 
     p_title = doc.add_paragraph()
     p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_title.paragraph_format.space_before = Pt(18)
-    p_title.paragraph_format.space_after = Pt(18)
+    p_title.paragraph_format.space_before = Pt(20)
+    p_title.paragraph_format.space_after = Pt(20)
     r_tit1 = p_title.add_run("Mini Project Report On\n")
     r_tit1.font.bold = True
     r_tit1.font.size = Pt(16)
@@ -181,8 +181,8 @@ def build_academic_docx(output_path, rep_dir):
 
     p_guide = doc.add_paragraph()
     p_guide.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_guide.paragraph_format.space_before = Pt(12)
-    p_guide.paragraph_format.space_after = Pt(16)
+    p_guide.paragraph_format.space_before = Pt(14)
+    p_guide.paragraph_format.space_after = Pt(18)
     r_g1 = p_guide.add_run("Guided By:-\n")
     r_g1.font.bold = True
     r_g1.font.size = Pt(13)
@@ -194,16 +194,16 @@ def build_academic_docx(output_path, rep_dir):
     r_s1 = p_guide.add_run("Submitted by:\n")
     r_s1.font.bold = True
     r_s1.font.size = Pt(13)
-    r_s2 = p_guide.add_run("AMMAR RAISAHMAD MULLA (TY A-16)\n")
+    r_s2 = p_guide.add_run("AMMAR RAISAHMAD MULLA\nClass: TY A-16 | Roll No: 16\nDepartment of Information Technology\n")
     r_s2.font.bold = True
-    r_s2.font.size = Pt(14)
+    r_s2.font.size = Pt(13.5)
     r_s2.font.color.rgb = RGBColor(0, 0, 0)
 
     p_footer = doc.add_paragraph()
     p_footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_footer.paragraph_format.space_before = Pt(20)
+    p_footer.paragraph_format.space_before = Pt(22)
     p_footer.paragraph_format.space_after = Pt(0)
-    r_foot = p_footer.add_run("Third Year B. Tech. (Information Technology)\nAcademic Year 2026-27\nSemester-V")
+    r_foot = p_footer.add_run("Academic Year 2026-27\nSemester-V")
     r_foot.font.bold = True
     r_foot.font.size = Pt(11)
 
@@ -229,12 +229,12 @@ def build_academic_docx(output_path, rep_dir):
     r_c_tit = p_cert.add_run("“Sentinel: Next-Generation Firewall & Intrusion Detection System”")
     r_c_tit.font.bold = True
     p_cert.add_run(" embodies the original work done by ")
-    r_c_name = p_cert.add_run("AMMAR RAISAHMAD MULLA (TY A-16)")
+    r_c_name = p_cert.add_run("AMMAR RAISAHMAD MULLA (Class: TY A-16)")
     r_c_name.font.bold = True
     p_cert.add_run(" as a partial fulfilment of the requirement of TAE-2 for the subject ")
     r_c_sub = p_cert.add_run("Fundamental of Cyber Security & Cryptography")
     r_c_sub.font.bold = True
-    p_cert.add_run(" under the Minor Degree in Cyber Security, Third Year B. Tech. (Department of Information Technology), Semester V, during the academic year 2026-2027.")
+    p_cert.add_run(" under the Department of Information Technology (Minor Degree in Cyber Security), Third Year B. Tech., Semester V, during the academic year 2026-2027.")
 
     p_meta = doc.add_paragraph()
     p_meta.paragraph_format.space_after = Pt(60)
@@ -255,7 +255,7 @@ def build_academic_docx(output_path, rep_dir):
     p_sig2.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     r_s2 = p_sig2.add_run("Mrs. Sarita Patil\n")
     r_s2.font.bold = True
-    p_sig2.add_run("Head of Department (IT)")
+    p_sig2.add_run("Head, Department of Information Technology")
 
     doc.add_page_break()
 
@@ -301,7 +301,7 @@ def build_academic_docx(output_path, rep_dir):
     p_ack_sub = doc.add_paragraph()
     p_ack_sub.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     p_ack_sub.paragraph_format.space_before = Pt(20)
-    r_asub = p_ack_sub.add_run("AMMAR RAISAHMAD MULLA\nThird Year B. Tech. (Information Technology, TY A-16)\nDepartment of Information Technology")
+    r_asub = p_ack_sub.add_run("AMMAR RAISAHMAD MULLA\nThird Year B. Tech. (Information Technology - TY A-16)\nDepartment of Information Technology")
     r_asub.font.bold = True
 
     doc.add_page_break()
@@ -322,13 +322,13 @@ def build_academic_docx(output_path, rep_dir):
         ("Sr. No", "Title", "Page No"),
         ("1.", "Problem Definition & Objectives", "1"),
         ("2.", "Introduction & Theoretical Background", "2"),
-        ("3.", "System Architecture & Data Pipelines", "3"),
-        ("4.", "Implementation: Design Web Pages & UI Modules", "4"),
-        ("5.", "Algorithms, Mathematical Models & Database Architecture", "12"),
-        ("6.", "Technology Stack & Deployment Architecture", "13"),
-        ("7.", "Results, Verification & Testing", "14"),
-        ("8.", "Conclusion & Future Scope", "15"),
-        ("9.", "References & Project Repositories", "15")
+        ("3.", "System Architecture & Data Pipelines", "4"),
+        ("4.", "Implementation: Design Web Pages & UI Modules", "5"),
+        ("5.", "Algorithms & Database Schema", "13"),
+        ("6.", "Technology Stack & Deployment Architecture", "14"),
+        ("7.", "Results, Verification & Testing", "15"),
+        ("8.", "Conclusion & Future Scope", "16"),
+        ("9.", "References & Project Repositories", "16")
     ]
 
     idx_tbl = doc.add_table(rows=len(index_data), cols=3)
@@ -568,17 +568,17 @@ def build_academic_docx(output_path, rep_dir):
 
     doc.add_page_break()
 
-    doc.add_heading("4.4 Heuristic Intrusion Detection System (IDS) Engine & Threat Feed", level=2)
+    doc.add_heading("4.4 Heuristic Intrusion Detection System (IDS) Engine & Live Threat Feed", level=2)
     p_ids_desc = doc.add_paragraph()
     p_ids_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p_ids_desc.paragraph_format.line_spacing = 1.2
     p_ids_desc.paragraph_format.space_after = Pt(4)
     p_ids_desc.add_run(
-        "The Intrusion Detection System inspects incoming traffic against known adversarial patterns, such as TCP SYN Floods (MITRE ATT&CK T1498.001), horizontal port sweeps, and DNS amplification reflection vectors. The threat intelligence console ranks alerts by severity, tracks containment status (Contained vs Uncontained), and provides 1-click 'Auto-Block IP' controls that immediately commit dynamic DROP rules to the policy engine. Figure 5 depicts the live threat intelligence feed."
+        "The Intrusion Detection System inspects incoming traffic against known adversarial patterns, such as TCP SYN Floods (MITRE ATT&CK T1498.001), horizontal port sweeps, and SSH/RDP brute force attempts. The threat intelligence console ranks alerts by severity, tallies frequency histograms, and provides 1-click 'Auto-Block IP' controls that immediately commit dynamic DROP rules to the policy engine. Figure 5 depicts the IDS threat intelligence console."
     )
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "ss_ids_feed.png"),
+        os.path.join(rep_dir, "ss_ids.png"),
         "Intrusion Detection System (IDS) Feed",
         "Real-time threat feed, attack severity breakdown, and automated mitigation controls.",
         "Fig 5 : Heuristic Intrusion Detection System (IDS) Engine & Threat Intelligence Feed",
@@ -604,61 +604,59 @@ def build_academic_docx(output_path, rep_dir):
         width_in=5.8
     )
 
-    doc.add_page_break()
-
-    doc.add_heading("4.6 Geopolitical Cyber Radar: Live Global Attack Origin Map", level=2)
+    doc.add_heading("4.6 Global IP Geolocation Threat Radar Map", level=2)
     p_geo_desc = doc.add_paragraph()
     p_geo_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p_geo_desc.paragraph_format.line_spacing = 1.2
     p_geo_desc.paragraph_format.space_after = Pt(4)
     p_geo_desc.add_run(
-        "The Geopolitical Cyber Radar maps packet ingress origins onto a tactical world map projection. Trajectory vectors radiate from geographic centers (e.g. Frankfurt, London, Moscow, Paris, Ashburn) toward the protected server cluster. The view features sweep radar concentric circles, threat category color coding, and node status indicators. Figure 7 illustrates the global threat radar map."
+        "The Global IP Geolocation Threat Radar maps packet ingress origins onto an interactive geopolitical world projection. High-velocity threat trajectories radiate from international epicenters (e.g. Frankfurt, Beijing, Moscow, Paris, Mumbai) toward the protected server cluster. Figure 7 illustrates the global cyber threat radar view."
     )
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "ss_geomap_radar.png"),
-        "Geopolitical Cyber Radar Map",
-        "Geopolitical world map with trajectory arcs, radar sweeps, and live global attack origins.",
-        "Fig 7 : Geopolitical Cyber Radar: Live Global Attack Origin Map",
+        os.path.join(rep_dir, "ss_geomap.png"),
+        "IP Geolocation Threat Radar Map",
+        "Geopolitical world map with trajectory arcs and geolocated ingress origin nodes.",
+        "Fig 7 : Geopolitical Cyber Radar World Map & Attack Ingress Trajectories",
         width_in=5.8
     )
 
     doc.add_page_break()
 
-    doc.add_heading("4.7 Geolocated Ingress Nodes & Threat Origins Inventory Table", level=2)
+    doc.add_heading("4.7 Geolocated Ingress Nodes & Threat Origins Inventory", level=2)
     p_orig_desc = doc.add_paragraph()
     p_orig_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p_orig_desc.paragraph_format.line_spacing = 1.2
     p_orig_desc.paragraph_format.space_after = Pt(4)
     p_orig_desc.add_run(
-        "Complementing the radar visualization, the Geolocated Ingress Nodes Inventory aggregates origin IPs into an actionable SOC inventory table. Each entry specifies Autonomous System Numbers (ASN / ISP), geographical coordinates, threat score assessment (Critical 98 to Low 18), cumulative packet volume, and 1-click 'Drop IP' defense mitigations. Figure 8 displays the geolocated origins table."
+        "Complementing the visual radar map, the Ingress Origins Inventory presents a tabular audit of all actively tracked IP addresses. The inventory displays country flags, Autonomous System Numbers (ASN / ISP e.g., Amazon.com, Reliance Jio, British Telecom, Fastly CDN), cumulative packet volume, dynamic threat assessments (CRITICAL 98, HIGH 94), and 1-click 'Drop IP' mitigation triggers. Figure 8 depicts the geolocated origins table."
     )
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "ss_geomap_origins.png"),
-        "Geolocated Ingress Nodes Table",
-        "Inventory of active ingress nodes with country badges, ASN providers, and threat rankings.",
+        os.path.join(rep_dir, "ss_geo_origins.png"),
+        "Geolocated Ingress Nodes & Threat Origins Table",
+        "Tabular inventory of tracked global IP origins with ASN metadata, threat ratings, and mitigation actions.",
         "Fig 8 : Geolocated Ingress Nodes & Threat Origins Inventory Table",
         width_in=5.8
     )
 
     doc.add_page_break()
 
-    doc.add_heading("4.8 Sentinel AI Copilot Autonomous Forensic Reasoning Drawer", level=2)
+    doc.add_heading("4.8 Sentinel AI Copilot (Gemini LLM) Incident Forensics", level=2)
     p_ai_desc = doc.add_paragraph()
     p_ai_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p_ai_desc.paragraph_format.line_spacing = 1.2
     p_ai_desc.paragraph_format.space_after = Pt(4)
     p_ai_desc.add_run(
-        "Integrated directly into the interface as an interactive slide-out drawer, the Sentinel AI Copilot leverages large language models (Google Gemini LLM) to execute wire-speed forensic telemetry assessment. The Copilot analyzes flagged attacker IPs, determines root-cause MITRE ATT&CK vectors, computes socket velocity (~480 frames/sec), and provides 1-click 'Generate iptables rules' actions. Figure 9 showcases the AI Copilot forensic analysis interface."
+        "Operating as an interactive slide-out drawer powered by the Google Gemini LLM API, the Sentinel AI Copilot performs real-time wire-speed forensics. When queried by the SecOps operator regarding flagged IP addresses (e.g., 52.95.120.67 originating from Paris, France), the copilot synthesizes kernel socket metrics, correlates MITRE ATT&CK techniques (T1498.001 Direct Network Flood), and generates technical dossiers alongside automated iptables mitigation rules. Figure 9 demonstrates the Sentinel AI Copilot forensic analysis."
     )
     add_image_or_placeholder(
         doc,
-        os.path.join(rep_dir, "ss_ai_copilot.png"),
+        os.path.join(rep_dir, "ss_ai.png"),
         "Sentinel AI Copilot Forensic Drawer",
-        "Sentinel AI Copilot performing autonomous root cause analysis with Gemini LLM integration.",
-        "Fig 9 : Sentinel AI Copilot Autonomous Forensic Reasoning & Remediation Drawer",
-        width_in=3.3
+        "Interactive forensic chat drawer with Gemini LLM providing root-cause analysis and mitigation recommendations.",
+        "Fig 9 : Sentinel AI Copilot (Gemini LLM) Autonomous Incident Forensics Drawer",
+        width_in=3.4
     )
 
     doc.add_heading("4.9 Live Adversary Attack Simulation Console & Critical Alert Banner", level=2)
@@ -667,14 +665,14 @@ def build_academic_docx(output_path, rep_dir):
     p_atk_desc.paragraph_format.line_spacing = 1.2
     p_atk_desc.paragraph_format.space_after = Pt(4)
     p_atk_desc.add_run(
-        "The integrated Adversary Attack Simulation Console allows security personnel to launch authentic cyber-threat vectors on demand—including high-velocity TCP SYN floods and port reconnaissance—surging traffic to over 50 packets per second to validate drop rule enforcement and trigger the top Critical Alert Banner. Figure 10 designates the reference slot for the active attack simulation modal."
+        "The integrated Adversary Attack Simulation Console allows security personnel to launch authentic cyber-threat vectors on demand—including high-velocity TCP SYN floods and port reconnaissance—surging traffic to over 50 packets per second to validate drop rule enforcement and trigger the top Critical Alert Banner. Figure 10 designates the slot for the active attack simulation console."
     )
     add_image_or_placeholder(
         doc,
         os.path.join(rep_dir, "ss_attack.png"),
         "Active Attack Simulation Console & Alert Banner",
         "Capture the Attack Simulation modal active with TCP SYN Flood (DDoS) running from 192.168.1.105 and top red Critical Threat Banner.",
-        "Fig 10 : Live Adversary Attack Simulation Console & Critical Alert Banner",
+        "Fig 10 : Live Attack Simulation Console & Critical Threat Banner",
         width_in=5.8
     )
 
@@ -743,61 +741,76 @@ def build_academic_docx(output_path, rep_dir):
     r_code.font.size = Pt(8.5)
     r_code.font.color.rgb = RGBColor(0, 0, 0)
 
-    doc.add_heading("5.4 Relational Database Architecture & MySQL Persistence Implementation", level=2)
-    p_sql_intro = doc.add_paragraph()
-    p_sql_intro.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    p_sql_intro.paragraph_format.line_spacing = 1.2
-    p_sql_intro.paragraph_format.space_after = Pt(6)
-    p_sql_intro.add_run(
-        "To guarantee stateful rule survival, audit compliance, and multi-session consistency across server reboots, Sentinel persists all policy records and packet accounting metrics within a relational MySQL database ('firewall_db'). Ingress packets matched against netfilter chains execute asynchronous updates against active rule counters (hits and byte tallies) without introducing kernel packet-processing bottlenecks. The complete production MySQL DDL schema and operational queries implemented in the Sentinel backend are specified below:"
+    doc.add_heading("5.4 Relational Database Schema & MySQL Table Definitions", level=2)
+    p_sql_desc = doc.add_paragraph()
+    p_sql_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_sql_desc.paragraph_format.line_spacing = 1.2
+    p_sql_desc.paragraph_format.space_after = Pt(4)
+    p_sql_desc.add_run(
+        "To ensure persistent state across browser sessions and host reboots, Sentinel maintains an ACID-compliant relational schema in MySQL ('firewall_db'). The schema comprises three core tables: 'firewall_rules' (for configured filtering policies, priority ranks, and real-time hit counters), 'packet_logs' (for granular audit trails, microsecond timestamps, and verdicts), and 'threat_events' (for IDS anomaly detections mapped to MITRE ATT&CK techniques). The complete Data Definition Language (DDL) implementation is documented below:"
     )
 
-    mysql_schema_code = (
-        "-- =============================================================\n"
-        "-- Sentinel Firewall & IDS: Relational Database Schema (MySQL)\n"
-        "-- Database: firewall_db | Engine: InnoDB | Charset: utf8mb4\n"
-        "-- =============================================================\n\n"
+    sql_code_block = (
+        "-- ====================================================================\n"
+        "-- Sentinel Next-Gen Firewall & IDS Platform - MySQL Database Schema\n"
+        "-- Database Name: firewall_db | Engine: InnoDB | Charset: utf8mb4\n"
+        "-- ====================================================================\n\n"
         "CREATE DATABASE IF NOT EXISTS firewall_db;\n"
         "USE firewall_db;\n\n"
-        "-- 1. Netfilter Policy Enforcement Rules Table\n"
+        "-- 1. Netfilter Firewall Filtering Policies Table\n"
         "CREATE TABLE IF NOT EXISTS firewall_rules (\n"
-        "    id INT AUTO_INCREMENT PRIMARY KEY,\n"
-        "    target_ip VARCHAR(50) NOT NULL COMMENT 'Target IPv4/CIDR or ANY',\n"
-        "    port VARCHAR(20) NOT NULL COMMENT 'Target Port or ALL',\n"
-        "    protocol VARCHAR(10) DEFAULT 'TCP' COMMENT 'TCP / UDP / ICMP',\n"
-        "    action ENUM('ALLOW', 'DROP') NOT NULL COMMENT 'Policy Verdict',\n"
-        "    description VARCHAR(255) DEFAULT '',\n"
-        "    hits INT DEFAULT 0 COMMENT 'Live Rule Match Counter',\n"
-        "    bytes VARCHAR(50) DEFAULT '0 B' COMMENT 'Cumulative Bandwidth',\n"
-        "    status VARCHAR(20) DEFAULT 'ACTIVE',\n"
-        "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n"
-        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n"
-        "-- 2. Security Audit & Ingress Packet Accounting Table\n"
-        "CREATE TABLE IF NOT EXISTS firewall_logs (\n"
-        "    id INT AUTO_INCREMENT PRIMARY KEY,\n"
-        "    time VARCHAR(30) NOT NULL COMMENT 'ISO Timestamp',\n"
-        "    proto VARCHAR(30) NOT NULL COMMENT 'Transport Protocol',\n"
-        "    src_ip VARCHAR(50) NOT NULL COMMENT 'Source IP Address',\n"
-        "    src_port INT COMMENT 'Source Port',\n"
-        "    dst_ip VARCHAR(50) NOT NULL COMMENT 'Destination IP Address',\n"
-        "    dst_port INT COMMENT 'Destination Port',\n"
-        "    len INT COMMENT 'Payload Length (Bytes)',\n"
-        "    action ENUM('ALLOW', 'DROP') NOT NULL,\n"
-        "    rule_id VARCHAR(50) COMMENT 'Matched Policy Rule ID',\n"
-        "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n"
-        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n"
-        "-- 3. Asynchronous Packet Match Hit & Byte Counter Incrementation\n"
-        "UPDATE firewall_rules \n"
-        "SET hits = hits + 1, \n"
-        "    bytes = CONCAT(ROUND(CAST(SUBSTRING_INDEX(bytes, ' ', 1) AS DECIMAL(10,2)) + (? / 1024), 2), ' KB')\n"
-        "WHERE id = ?;"
+        "    id VARCHAR(36) PRIMARY KEY COMMENT 'Unique Rule UUID',\n"
+        "    priority INT NOT NULL DEFAULT 100 COMMENT 'Rule specificity order',\n"
+        "    source_ip VARCHAR(45) NOT NULL DEFAULT '0.0.0.0/0' COMMENT 'CIDR/IP',\n"
+        "    destination_port VARCHAR(10) NOT NULL DEFAULT 'ALL' COMMENT 'Port or ALL',\n"
+        "    protocol ENUM('TCP', 'UDP', 'ICMP', 'ALL') NOT NULL DEFAULT 'ALL',\n"
+        "    action ENUM('ALLOW', 'DROP') NOT NULL DEFAULT 'ALLOW',\n"
+        "    description VARCHAR(255) COMMENT 'Rule rationale or note',\n"
+        "    hit_count BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Packet hits',\n"
+        "    byte_count BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Processed bytes',\n"
+        "    is_active BOOLEAN NOT NULL DEFAULT TRUE,\n"
+        "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n"
+        "    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n"
+        "    INDEX idx_lookup (is_active, protocol, destination_port, source_ip)\n"
+        ") ENGINE=InnoDB;\n\n"
+        "-- 2. Stateful Packet Audit Trail & Telemetry Logs\n"
+        "CREATE TABLE IF NOT EXISTS packet_logs (\n"
+        "    log_id BIGINT AUTO_INCREMENT PRIMARY KEY,\n"
+        "    timestamp DATETIME(3) NOT NULL,\n"
+        "    source_ip VARCHAR(45) NOT NULL,\n"
+        "    destination_ip VARCHAR(45) NOT NULL,\n"
+        "    destination_port INT UNSIGNED NOT NULL,\n"
+        "    protocol VARCHAR(15) NOT NULL,\n"
+        "    packet_length INT UNSIGNED NOT NULL,\n"
+        "    verdict ENUM('ALLOW', 'DROP') NOT NULL,\n"
+        "    matched_rule_id VARCHAR(36),\n"
+        "    geo_country VARCHAR(50),\n"
+        "    geo_city VARCHAR(50),\n"
+        "    FOREIGN KEY (matched_rule_id) REFERENCES firewall_rules(id) ON DELETE SET NULL,\n"
+        "    INDEX idx_time_verdict (timestamp, verdict),\n"
+        "    INDEX idx_src_ip (source_ip)\n"
+        ") ENGINE=InnoDB;\n\n"
+        "-- 3. Heuristic Intrusion Detection (IDS) Incident Records\n"
+        "CREATE TABLE IF NOT EXISTS threat_events (\n"
+        "    threat_id VARCHAR(36) PRIMARY KEY,\n"
+        "    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n"
+        "    attacker_ip VARCHAR(45) NOT NULL,\n"
+        "    signature_name VARCHAR(100) NOT NULL,\n"
+        "    mitre_attack_id VARCHAR(20) NOT NULL,\n"
+        "    severity ENUM('CRITICAL', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,\n"
+        "    target_port INT UNSIGNED,\n"
+        "    packet_velocity INT UNSIGNED COMMENT 'Probes/sec at detection',\n"
+        "    containment_status ENUM('UNCONTAINED', 'CONTAINED') DEFAULT 'UNCONTAINED',\n"
+        "    auto_blocked BOOLEAN DEFAULT FALSE,\n"
+        "    INDEX idx_attacker_sev (attacker_ip, severity)\n"
+        ") ENGINE=InnoDB;"
     )
     p_sql = doc.add_paragraph()
     p_sql.paragraph_format.space_before = Pt(4)
     p_sql.paragraph_format.space_after = Pt(12)
-    r_sql = p_sql.add_run(mysql_schema_code)
+    r_sql = p_sql.add_run(sql_code_block)
     r_sql.font.name = 'Consolas'
-    r_sql.font.size = Pt(8.0)
+    r_sql.font.size = Pt(7.5)
     r_sql.font.color.rgb = RGBColor(0, 0, 0)
 
     doc.add_page_break()
@@ -1101,9 +1114,9 @@ def build_academic_pdf(pdf_path, rep_dir):
     story.append(Spacer(1, 22))
     story.append(Paragraph("<b>Guided By:-</b><br/><font size=11 color='#000000'><b>Prof. Birudev Yele</b></font>", ParagraphStyle('CoverGuide', parent=sub_style, fontSize=10, leading=14)))
     story.append(Spacer(1, 16))
-    story.append(Paragraph("<b>Submitted by:</b><br/><font size=12 color='#000000'><b>AMMAR RAISAHMAD MULLA (TY A-16)</b></font>", ParagraphStyle('CoverSubm', parent=sub_style, fontSize=10, leading=14)))
-    story.append(Spacer(1, 28))
-    story.append(Paragraph("<b>Third Year B. Tech. (Information Technology)<br/>Academic Year 2026-27<br/>Semester-V</b>", ParagraphStyle('CoverYear', parent=sub_style, fontSize=10, leading=14, fontName='Helvetica-Bold')))
+    story.append(Paragraph("<b>Submitted by:</b><br/><font size=12 color='#000000'><b>AMMAR RAISAHMAD MULLA</b></font><br/><font size=10 color='#000000'>Class: TY A-16 | Roll No: 16<br/>Department of Information Technology</font>", ParagraphStyle('CoverSubm', parent=sub_style, fontSize=10, leading=14)))
+    story.append(Spacer(1, 24))
+    story.append(Paragraph("<b>Academic Year 2026-27<br/>Semester-V</b>", ParagraphStyle('CoverYear', parent=sub_style, fontSize=10, leading=14, fontName='Helvetica-Bold')))
     
     story.append(PageBreak())
 
@@ -1112,9 +1125,9 @@ def build_academic_pdf(pdf_path, rep_dir):
     story.append(Spacer(1, 20))
     cert_text = (
         "This is to certify that the mini project entitled <b>“Sentinel: Next-Generation Firewall & Intrusion Detection System”</b> "
-        "embodies the original work done by <b>AMMAR RAISAHMAD MULLA (TY A-16)</b> as a partial fulfilment of the requirement of TAE-2 for "
-        "the subject <b>Fundamental of Cyber Security & Cryptography</b> under the Minor Degree in Cyber Security, Third Year B. Tech. "
-        "(Department of Information Technology), Semester V, during the academic year 2026-2027."
+        "embodies the original work done by <b>AMMAR RAISAHMAD MULLA (Class: TY A-16)</b> as a partial fulfilment of the requirement of TAE-2 for "
+        "the subject <b>Fundamental of Cyber Security & Cryptography</b> under the <b>Department of Information Technology</b> (Minor Degree in Cyber Security), Third Year B. Tech., "
+        "Semester V, during the academic year 2026-2027."
     )
     story.append(Paragraph(cert_text, ParagraphStyle('CertBody', parent=body_style, fontSize=10, leading=15)))
     story.append(Spacer(1, 40))
@@ -1123,7 +1136,7 @@ def build_academic_pdf(pdf_path, rep_dir):
 
     sig_data = [[
         Paragraph("<b>Prof. Birudev Yele</b><br/><font size=8 color='#475569'>Project Guide</font>", ParagraphStyle('Sig1', parent=body_style)),
-        Paragraph("<b>Mrs. Sarita Patil</b><br/><font size=8 color='#475569'>Head of Department (IT)</font>", ParagraphStyle('Sig2', parent=body_style, alignment=2))
+        Paragraph("<b>Mrs. Sarita Patil</b><br/><font size=8 color='#475569'>Head, Department of Information Technology</font>", ParagraphStyle('Sig2', parent=body_style, alignment=2))
     ]]
     sig_tbl = Table(sig_data, colWidths=[2.8*inch, 2.8*inch])
     sig_tbl.setStyle(TableStyle([
@@ -1159,7 +1172,7 @@ def build_academic_pdf(pdf_path, rep_dir):
     story.append(Spacer(1, 8))
     story.append(Paragraph(ack_p3, body_style))
     story.append(Spacer(1, 24))
-    story.append(Paragraph("<b>AMMAR RAISAHMAD MULLA</b><br/>Third Year B. Tech. (Information Technology, TY A-16)<br/>Department of Information Technology", ParagraphStyle('AckSign', parent=body_style, alignment=2, leading=13)))
+    story.append(Paragraph("<b>AMMAR RAISAHMAD MULLA</b><br/>Third Year B. Tech. (Information Technology - TY A-16)<br/>Department of Information Technology", ParagraphStyle('AckSign', parent=body_style, alignment=2, leading=13)))
 
     story.append(PageBreak())
 
@@ -1170,13 +1183,13 @@ def build_academic_pdf(pdf_path, rep_dir):
         ["Sr. No", "Title", "Page No"],
         ["1.", "Problem Definition & Objectives", "1"],
         ["2.", "Introduction & Theoretical Background", "2"],
-        ["3.", "System Architecture & Data Pipelines", "3"],
-        ["4.", "Implementation: Design Web Pages & UI Modules", "4"],
-        ["5.", "Algorithms, Mathematical Models & Database Architecture", "12"],
-        ["6.", "Technology Stack & Deployment Architecture", "13"],
-        ["7.", "Results, Verification & Testing", "14"],
-        ["8.", "Conclusion & Future Scope", "15"],
-        ["9.", "References & Project Repositories", "15"]
+        ["3.", "System Architecture & Data Pipelines", "4"],
+        ["4.", "Implementation: Design Web Pages & UI Modules", "5"],
+        ["5.", "Algorithms & Database Schema", "13"],
+        ["6.", "Technology Stack & Deployment Architecture", "14"],
+        ["7.", "Results, Verification & Testing", "15"],
+        ["8.", "Conclusion & Future Scope", "16"],
+        ["9.", "References & Project Repositories", "16"]
     ]
     idx_table_data = []
     for r_i, row in enumerate(idx_rows):
@@ -1340,24 +1353,24 @@ def build_academic_pdf(pdf_path, rep_dir):
         body_style
     ))
 
-    def add_pdf_screenshot_block(img_name, title, desc, caption, max_w_in=5.8, max_h_in=None):
+    def add_pdf_screenshot_block(img_name, title, desc, caption, width=5.8*inch, height=None, keep_together=True):
         img_p = os.path.join(rep_dir, img_name)
         if os.path.exists(img_p):
-            from PIL import Image
-            with Image.open(img_p) as im:
-                orig_w, orig_h = im.size
-            aspect = orig_h / float(orig_w)
-            calc_w = max_w_in * inch
-            calc_h = calc_w * aspect
-            if max_h_in and calc_h > (max_h_in * inch):
-                calc_h = max_h_in * inch
-                calc_w = calc_h / aspect
-            return KeepTogether([
-                RLImage(img_p, width=calc_w, height=calc_h),
+            if height is None:
+                try:
+                    from PIL import Image
+                    with Image.open(img_p) as im:
+                        im_w, im_h = im.size
+                        height = width * (float(im_h) / float(im_w))
+                except Exception:
+                    height = width * 0.5
+            elements = [
+                RLImage(img_p, width=width, height=height),
                 Spacer(1, 3),
                 Paragraph(f"<b>{caption}</b>", ParagraphStyle('CapP', parent=body_style, alignment=1, fontName='Helvetica-Bold', fontSize=8.5)),
                 Spacer(1, 8)
-            ])
+            ]
+            return KeepTogether(elements) if keep_together else elements
         else:
             data = [[
                 Paragraph(f"<b>📷 [SCREENSHOT PLACEHOLDER: {title}]</b><br/><font size=7.5 color='#475569'><i>{desc}</i></font>", ParagraphStyle('BoxP', parent=body_style, fontSize=8.5, leading=11))
@@ -1385,7 +1398,7 @@ def build_academic_pdf(pdf_path, rep_dir):
         "Sentinel implements a hardened administrative authentication portal requiring credential validation before exposing the tactical dashboard.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_login.png", "Administrator Login Screen", "Administrator authentication portal.", "Fig 2 : Administrator Authentication & Security Access Portal", max_w_in=3.2, max_h_in=4.2))
+    story.append(add_pdf_screenshot_block("ss_login.png", "Administrator Login Screen", "Administrator authentication portal.", "Fig 2 : Administrator Authentication & Security Access Portal", width=3.2*inch))
 
     story.append(PageBreak())
 
@@ -1395,7 +1408,7 @@ def build_academic_pdf(pdf_path, rep_dir):
         "high-velocity telemetry, packet throughput gauges, engine health monitors, and a live sequential packet log stream with real-time [ALLOW] and [DROP] verdicts.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_dashboard.png", "Sentinel Command Center Dashboard", "Complete dashboard with real-time throughput metrics, live packet terminal, and engine controls.", "Fig 3 : Sentinel Command Center Dashboard (Live Telemetry & Traffic Stream)", max_w_in=5.8))
+    story.append(add_pdf_screenshot_block("ss_dashboard.png", "Sentinel Command Center Dashboard", "Complete dashboard with real-time throughput metrics, live packet terminal, and engine controls.", "Fig 3 : Sentinel Command Center Dashboard (Live Telemetry & Traffic Stream)", width=5.8*inch))
 
     story.append(PageBreak())
 
@@ -1404,16 +1417,16 @@ def build_academic_pdf(pdf_path, rep_dir):
         "The interactive Network Topology Mesh Graph visualizes packet flows across spatial coordinates. The central Sentinel Core is linked to external threats via red dashed arcs and to authorized clients via green arcs. Operators can freely drag nodes; dynamic cubic Bézier vectors recalculate in real time to maintain smooth curves.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_topology.png", "Network Topology Mesh Graph", "Interactive SVG mesh with central Sentinel hub, draggable nodes, and animated packet trajectories.", "Fig 4 : Interactive Network Topology Mesh Graph with Draggable Nodes & Dynamic Bézier Curves", max_w_in=5.8))
+    story.append(add_pdf_screenshot_block("ss_topology.png", "Network Topology Mesh Graph", "Interactive SVG mesh with central Sentinel hub, draggable nodes, and animated packet trajectories.", "Fig 4 : Interactive Network Topology Mesh Graph with Draggable Nodes & Dynamic Bézier Curves", width=5.8*inch))
 
     story.append(PageBreak())
 
-    story.append(Paragraph("4.4 Heuristic Intrusion Detection System (IDS) Engine & Threat Feed", h2_style))
+    story.append(Paragraph("4.4 Heuristic Intrusion Detection System (IDS) Engine & Live Threat Feed", h2_style))
     story.append(Paragraph(
-        "The Intrusion Detection System inspects incoming traffic against known adversarial patterns, such as TCP SYN Floods (MITRE ATT&CK T1498.001), port sweeps, and DNS reflection amplification vectors. The console ranks alerts by severity, tracks containment status, and provides 1-click 'Auto-Block IP' controls.",
+        "The Intrusion Detection System inspects incoming traffic against known adversarial patterns, such as TCP SYN Floods (MITRE ATT&CK T1498.001), port sweeps, and brute force attempts. The console ranks alerts by severity and provides 1-click 'Auto-Block IP' controls that commit dynamic DROP rules immediately.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_ids_feed.png", "Intrusion Detection System (IDS) Feed", "Real-time threat feed, attack severity breakdown, and automated mitigation controls.", "Fig 5 : Heuristic Intrusion Detection System (IDS) Engine & Threat Intelligence Feed", max_w_in=5.8))
+    story.append(add_pdf_screenshot_block("ss_ids.png", "Intrusion Detection System (IDS) Feed", "Real-time threat feed, attack severity breakdown, and automated mitigation controls.", "Fig 5 : Heuristic Intrusion Detection System (IDS) Engine & Threat Intelligence Feed", width=5.8*inch))
 
     story.append(PageBreak())
 
@@ -1422,48 +1435,46 @@ def build_academic_pdf(pdf_path, rep_dir):
         "The Firewall Policy Manager enables granular Layer 4 rule configuration (Source IP, Port, Protocol, Action). Policies are synchronized with MySQL ('firewall_db'), maintaining persistent hit counters and byte tallies across reboots.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_rules.png", "Firewall Policy & Rule Manager Table", "Configured firewall rules synced with MySQL database with real-time hit and byte counters.", "Fig 6 : Firewall Policy & Dynamic Filtering Rules Engine (MySQL Persistent)", max_w_in=5.8))
+    story.append(add_pdf_screenshot_block("ss_rules.png", "Firewall Policy & Rule Manager Table", "Configured firewall rules synced with MySQL database with real-time hit and byte counters.", "Fig 6 : Firewall Policy & Dynamic Filtering Rules Engine (MySQL Persistent)", width=5.8*inch))
+
+    story.append(Paragraph("4.6 Global IP Geolocation Threat Radar Map", h2_style))
+    story.append(Paragraph(
+        "The Global Threat Radar maps packet ingress origins onto an interactive geopolitical world projection. High-velocity threat trajectories radiate from international epicenters (Frankfurt, Beijing, Moscow, Paris, Mumbai) toward the protected server cluster.",
+        body_style
+    ))
+    story.append(add_pdf_screenshot_block("ss_geomap.png", "IP Geolocation Threat Radar Map", "Geopolitical world map with trajectory arcs and geolocated ingress origin nodes.", "Fig 7 : Geopolitical Cyber Radar World Map & Attack Ingress Trajectories", width=5.8*inch))
 
     story.append(PageBreak())
 
-    story.append(Paragraph("4.6 Geopolitical Cyber Radar: Live Global Attack Origin Map", h2_style))
+    story.append(Paragraph("4.7 Geolocated Ingress Nodes & Threat Origins Inventory", h2_style))
     story.append(Paragraph(
-        "The Geopolitical Cyber Radar maps packet ingress origins onto a tactical world map projection. Trajectory vectors radiate from geographic centers (e.g. Frankfurt, London, Moscow, Paris, Ashburn) toward the protected server cluster with concentric radar sweeps and category coding.",
+        "The Ingress Origins Inventory presents a tabular audit of all actively tracked IP addresses, displaying country flags, ASN metadata (Amazon, Reliance Jio, British Telecom, Fastly), packet volume, dynamic threat ratings (CRITICAL 98), and 1-click 'Drop IP' triggers.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_geomap_radar.png", "Geopolitical Cyber Radar Map", "Geopolitical world map with trajectory arcs, radar sweeps, and live global attack origins.", "Fig 7 : Geopolitical Cyber Radar: Live Global Attack Origin Map", max_w_in=5.8))
+    story.append(add_pdf_screenshot_block("ss_geo_origins.png", "Geolocated Ingress Nodes & Threat Origins Table", "Tabular inventory of tracked global IP origins with ASN metadata, threat ratings, and mitigation actions.", "Fig 8 : Geolocated Ingress Nodes & Threat Origins Inventory Table", width=5.8*inch))
 
     story.append(PageBreak())
 
-    story.append(Paragraph("4.7 Geolocated Ingress Nodes & Threat Origins Inventory Table", h2_style))
+    story.append(Paragraph("4.8 Sentinel AI Copilot (Gemini LLM) Incident Forensics", h2_style))
     story.append(Paragraph(
-        "Complementing the radar view, the Ingress Nodes Inventory aggregates active origins into an actionable SecOps table with Autonomous System Numbers (ASN / ISP), geographic coordinates, threat rankings (Critical 98 to Low 18), volume tallies, and 1-click 'Drop IP' defense mitigations.",
+        "Powered by the Google Gemini LLM API, the Sentinel AI Copilot performs wire-speed forensics. When queried regarding flagged IP addresses (e.g. 52.95.120.67 from Paris, France), the copilot correlates MITRE ATT&CK techniques (T1498.001) and generates automated iptables drop rules.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_geomap_origins.png", "Geolocated Ingress Nodes Table", "Inventory of active ingress nodes with country badges, ASN providers, and threat rankings.", "Fig 8 : Geolocated Ingress Nodes & Threat Origins Inventory Table", max_w_in=5.8))
-
-    story.append(PageBreak())
-
-    story.append(Paragraph("4.8 Sentinel AI Copilot Autonomous Forensic Reasoning Drawer", h2_style))
-    story.append(Paragraph(
-        "Operating as an interactive slide-out drawer, the Sentinel AI Copilot leverages Google Gemini LLM to execute wire-speed forensic telemetry assessment. The Copilot analyzes flagged attacker IPs, computes socket velocity (~480 frames/sec), and provides 1-click 'Generate iptables rules' actions.",
-        body_style
-    ))
-    story.append(add_pdf_screenshot_block("ss_ai_copilot.png", "Sentinel AI Copilot Forensic Drawer", "Sentinel AI Copilot performing autonomous root cause analysis with Gemini LLM integration.", "Fig 9 : Sentinel AI Copilot Autonomous Forensic Reasoning & Remediation Drawer", max_w_in=3.2, max_h_in=4.8))
+    story.append(add_pdf_screenshot_block("ss_ai.png", "Sentinel AI Copilot Forensic Drawer", "Interactive forensic chat drawer with Gemini LLM providing root-cause analysis and mitigation recommendations.", "Fig 9 : Sentinel AI Copilot (Gemini LLM) Autonomous Incident Forensics Drawer", width=3.2*inch))
 
     story.append(Paragraph("4.9 Live Adversary Attack Simulation Console & Critical Alert Banner", h2_style))
     story.append(Paragraph(
         "The integrated simulation console allows security personnel to launch authentic cyber-threat vectors on demand (TCP SYN Floods, Port Scans), surging traffic to over 50 packets/sec to validate drop enforcement and trigger the top Critical Alert Banner.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_attack.png", "Active Attack Simulation Console & Alert Banner", "Capture the Attack Simulation modal active with TCP SYN Flood (DDoS) running from 192.168.1.105 and top red Critical Threat Banner.", "Fig 10 : Live Adversary Attack Simulation Console & Critical Alert Banner", max_w_in=5.8, max_h_in=1.1))
+    story.append(add_pdf_screenshot_block("ss_attack.png", "Active Attack Simulation Console & Alert Banner", "Capture the Attack Simulation modal active with TCP SYN Flood (DDoS) running from 192.168.1.105 and top red Critical Threat Banner.", "Fig 10 : Live Attack Simulation Console & Critical Threat Banner", width=5.8*inch, height=1.2*inch))
 
     story.append(PageBreak())
 
     # -------------------------------------------------------------
-    # 9. CHAPTER 5: ALGORITHMS, MODELS & DATABASE ARCHITECTURE
+    # 9. CHAPTER 5: ALGORITHMS & WORKING
     # -------------------------------------------------------------
-    story.append(Paragraph("5. Algorithms, Mathematical Models & Database Architecture", h1_style))
+    story.append(Paragraph("5. Algorithms & Working Mechanism", h1_style))
     story.append(Paragraph("5.1 Netfilter Rule Matching Algorithm", h2_style))
     story.append(Paragraph(
         "Sentinel sorts all active policies by specificity: explicit IP matches precede wildcard '0.0.0.0/0', and specific ports precede 'ALL'. "
@@ -1477,8 +1488,8 @@ def build_academic_pdf(pdf_path, rep_dir):
         "<b>B(t) = (1-t)³ P0 + 3(1-t)² t P1 + 3(1-t) t² P2 + t³ P3</b>",
         body_style
     ))
-    story.append(Paragraph("5.3 Core Pseudocode", h2_style))
 
+    story.append(Paragraph("5.3 Core Netfilter & IDS Pseudocode", h2_style))
     code_text = (
         "// Pseudocode: Netfilter Packet Evaluation & Heuristic IDS Inspection\n"
         "function evaluatePacketAgainstRules(packet, rules):\n"
@@ -1493,49 +1504,65 @@ def build_academic_pdf(pdf_path, rep_dir):
         "    if packet.dstPort in [22, 3389] and packet.rate > THRESHOLD:\n"
         "        return triggerAlert('Brute-Force Probe', 'ET-AUTH-PROBE', 'HIGH')"
     )
-    story.append(Paragraph(f"<font face='Courier' size=7.2 color='#000000'>{code_text.replace(chr(10), '<br/>')}</font>", ParagraphStyle('CodeP', parent=body_style, backColor=colors.HexColor("#F8FAFC"), borderPadding=5)))
+    story.append(Paragraph(f"<font face='Courier' size=7.5 color='#000000'>{code_text.replace(chr(10), '<br/>')}</font>", ParagraphStyle('CodeP', parent=body_style, backColor=colors.HexColor("#F8FAFC"), borderPadding=6)))
 
-    story.append(Paragraph("5.4 Relational Database Architecture & MySQL Persistence Implementation", h2_style))
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("5.4 Relational Database Schema & MySQL Table Definitions", h2_style))
     story.append(Paragraph(
-        "To guarantee stateful rule survival, audit compliance, and multi-session consistency across server reboots, "
-        "Sentinel persists all policy records and packet accounting metrics within a relational MySQL database ('firewall_db'). "
-        "The production DDL schema and asynchronous metric update queries are implemented as follows:",
+        "To ensure persistent state across sessions and reboots, Sentinel maintains an ACID-compliant relational schema in MySQL ('firewall_db'). "
+        "The schema defines three core tables: 'firewall_rules', 'packet_logs', and 'threat_events' as documented in the DDL below:",
         body_style
     ))
 
-    mysql_pdf_code = (
-        "-- Sentinel Firewall & IDS: Relational Database Schema (MySQL)\n"
+    sql_pdf_text = (
+        "-- Sentinel Next-Gen Firewall MySQL Database Schema (firewall_db)\n"
         "CREATE DATABASE IF NOT EXISTS firewall_db;\n"
         "USE firewall_db;\n\n"
-        "-- 1. Netfilter Policy Enforcement Rules Table\n"
+        "-- 1. Netfilter Firewall Filtering Policies Table\n"
         "CREATE TABLE IF NOT EXISTS firewall_rules (\n"
-        "    id INT AUTO_INCREMENT PRIMARY KEY,\n"
-        "    target_ip VARCHAR(50) NOT NULL COMMENT 'Target IPv4/CIDR or ANY',\n"
-        "    port VARCHAR(20) NOT NULL COMMENT 'Target Port or ALL',\n"
-        "    protocol VARCHAR(10) DEFAULT 'TCP' COMMENT 'TCP / UDP / ICMP',\n"
-        "    action ENUM('ALLOW', 'DROP') NOT NULL COMMENT 'Policy Verdict',\n"
-        "    description VARCHAR(255) DEFAULT '',\n"
-        "    hits INT DEFAULT 0 COMMENT 'Live Rule Match Counter',\n"
-        "    bytes VARCHAR(50) DEFAULT '0 B' COMMENT 'Cumulative Bandwidth',\n"
-        "    status VARCHAR(20) DEFAULT 'ACTIVE',\n"
-        "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n"
-        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n"
-        "-- 2. Security Audit & Ingress Packet Accounting Table\n"
-        "CREATE TABLE IF NOT EXISTS firewall_logs (\n"
-        "    id INT AUTO_INCREMENT PRIMARY KEY,\n"
-        "    time VARCHAR(30) NOT NULL, proto VARCHAR(30) NOT NULL,\n"
-        "    src_ip VARCHAR(50) NOT NULL, src_port INT,\n"
-        "    dst_ip VARCHAR(50) NOT NULL, dst_port INT, len INT,\n"
-        "    action ENUM('ALLOW', 'DROP') NOT NULL, rule_id VARCHAR(50),\n"
-        "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n"
-        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n"
-        "-- 3. Asynchronous Packet Match Hit & Byte Counter Incrementation\n"
-        "UPDATE firewall_rules \n"
-        "SET hits = hits + 1, \n"
-        "    bytes = CONCAT(ROUND(CAST(SUBSTRING_INDEX(bytes, ' ', 1) AS DECIMAL(10,2)) + (? / 1024), 2), ' KB')\n"
-        "WHERE id = ?;"
+        "    id VARCHAR(36) PRIMARY KEY COMMENT 'Unique Rule UUID',\n"
+        "    priority INT NOT NULL DEFAULT 100,\n"
+        "    source_ip VARCHAR(45) NOT NULL DEFAULT '0.0.0.0/0',\n"
+        "    destination_port VARCHAR(10) NOT NULL DEFAULT 'ALL',\n"
+        "    protocol ENUM('TCP', 'UDP', 'ICMP', 'ALL') NOT NULL DEFAULT 'ALL',\n"
+        "    action ENUM('ALLOW', 'DROP') NOT NULL DEFAULT 'ALLOW',\n"
+        "    description VARCHAR(255),\n"
+        "    hit_count BIGINT UNSIGNED NOT NULL DEFAULT 0,\n"
+        "    byte_count BIGINT UNSIGNED NOT NULL DEFAULT 0,\n"
+        "    is_active BOOLEAN NOT NULL DEFAULT TRUE,\n"
+        "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n"
+        "    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n"
+        "    INDEX idx_lookup (is_active, protocol, destination_port, source_ip)\n"
+        ") ENGINE=InnoDB;\n\n"
+        "-- 2. Stateful Packet Audit Trail & Telemetry Logs\n"
+        "CREATE TABLE IF NOT EXISTS packet_logs (\n"
+        "    log_id BIGINT AUTO_INCREMENT PRIMARY KEY,\n"
+        "    timestamp DATETIME(3) NOT NULL,\n"
+        "    source_ip VARCHAR(45) NOT NULL,\n"
+        "    destination_ip VARCHAR(45) NOT NULL,\n"
+        "    destination_port INT UNSIGNED NOT NULL,\n"
+        "    protocol VARCHAR(15) NOT NULL,\n"
+        "    verdict ENUM('ALLOW', 'DROP') NOT NULL,\n"
+        "    matched_rule_id VARCHAR(36),\n"
+        "    geo_country VARCHAR(50),\n"
+        "    FOREIGN KEY (matched_rule_id) REFERENCES firewall_rules(id) ON DELETE SET NULL,\n"
+        "    INDEX idx_time_verdict (timestamp, verdict)\n"
+        ") ENGINE=InnoDB;\n\n"
+        "-- 3. Heuristic Intrusion Detection (IDS) Records\n"
+        "CREATE TABLE IF NOT EXISTS threat_events (\n"
+        "    threat_id VARCHAR(36) PRIMARY KEY,\n"
+        "    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n"
+        "    attacker_ip VARCHAR(45) NOT NULL,\n"
+        "    signature_name VARCHAR(100) NOT NULL,\n"
+        "    mitre_attack_id VARCHAR(20) NOT NULL,\n"
+        "    severity ENUM('CRITICAL', 'HIGH', 'MEDIUM', 'LOW') NOT NULL,\n"
+        "    packet_velocity INT UNSIGNED,\n"
+        "    containment_status ENUM('UNCONTAINED', 'CONTAINED') DEFAULT 'UNCONTAINED',\n"
+        "    INDEX idx_attacker_sev (attacker_ip, severity)\n"
+        ") ENGINE=InnoDB;"
     )
-    story.append(Paragraph(f"<font face='Courier' size=6.8 color='#000000'>{mysql_pdf_code.replace(chr(10), '<br/>')}</font>", ParagraphStyle('SqlCodeP', parent=body_style, backColor=colors.HexColor("#F8FAFC"), borderPadding=5)))
+    story.append(Paragraph(f"<font face='Courier' size=6.8 color='#000000'>{sql_pdf_text.replace(chr(10), '<br/>').replace(' ', '&nbsp;')}</font>", ParagraphStyle('SqlCodeP', parent=body_style, backColor=colors.HexColor("#F8FAFC"), borderPadding=6)))
 
     story.append(Spacer(1, 10))
 
