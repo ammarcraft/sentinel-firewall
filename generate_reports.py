@@ -665,15 +665,15 @@ def build_academic_docx(output_path, rep_dir):
     p_atk_desc.paragraph_format.line_spacing = 1.2
     p_atk_desc.paragraph_format.space_after = Pt(4)
     p_atk_desc.add_run(
-        "The integrated Adversary Attack Simulation Console allows security personnel to launch authentic cyber-threat vectors on demand—including high-velocity TCP SYN floods and port reconnaissance—surging traffic to over 50 packets per second to validate drop rule enforcement and trigger the top Critical Alert Banner. Figure 10 designates the slot for the active attack simulation console."
+        "The integrated Adversary Attack Simulation Console allows security personnel to launch authentic cyber-threat vectors on demand—including high-velocity TCP SYN floods and port reconnaissance—surging traffic to over 50 packets per second to validate drop rule enforcement and trigger the top Critical Alert Banner. Figure 10 depicts the live attack simulation console."
     )
     add_image_or_placeholder(
         doc,
         os.path.join(rep_dir, "ss_attack.png"),
-        "Active Attack Simulation Console & Alert Banner",
-        "Capture the Attack Simulation modal active with TCP SYN Flood (DDoS) running from 192.168.1.105 and top red Critical Threat Banner.",
-        "Fig 10 : Live Attack Simulation Console & Critical Threat Banner",
-        width_in=5.8
+        "Live Adversary Attack Simulation Console",
+        "Live adversary attack simulation modal configured for high-rate TCP SYN flood injection.",
+        "Fig 10 : Live Adversary Attack Simulation Console & Threat Configuration",
+        width_in=5.0
     )
 
     doc.add_page_break()
@@ -1462,12 +1462,14 @@ def build_academic_pdf(pdf_path, rep_dir):
     ))
     story.append(add_pdf_screenshot_block("ss_ai.png", "Sentinel AI Copilot Forensic Drawer", "Interactive forensic chat drawer with Gemini LLM providing root-cause analysis and mitigation recommendations.", "Fig 9 : Sentinel AI Copilot (Gemini LLM) Autonomous Incident Forensics Drawer", width=3.2*inch))
 
+    story.append(PageBreak())
+
     story.append(Paragraph("4.9 Live Adversary Attack Simulation Console & Critical Alert Banner", h2_style))
     story.append(Paragraph(
-        "The integrated simulation console allows security personnel to launch authentic cyber-threat vectors on demand (TCP SYN Floods, Port Scans), surging traffic to over 50 packets/sec to validate drop enforcement and trigger the top Critical Alert Banner.",
+        "The integrated simulation console allows security personnel to launch authentic cyber-threat vectors on demand (TCP SYN Floods, Port Scans), surging traffic to over 50 packets/sec to validate drop enforcement and trigger the top Critical Alert Banner. Figure 10 depicts the live attack simulation console view.",
         body_style
     ))
-    story.append(add_pdf_screenshot_block("ss_attack.png", "Active Attack Simulation Console & Alert Banner", "Capture the Attack Simulation modal active with TCP SYN Flood (DDoS) running from 192.168.1.105 and top red Critical Threat Banner.", "Fig 10 : Live Attack Simulation Console & Critical Threat Banner", width=5.8*inch, height=1.2*inch))
+    story.append(add_pdf_screenshot_block("ss_attack.png", "Live Adversary Attack Simulation Console", "Live adversary attack simulation modal configured for high-rate TCP SYN flood injection.", "Fig 10 : Live Adversary Attack Simulation Console & Threat Configuration", width=4.8*inch))
 
     story.append(PageBreak())
 
@@ -1672,6 +1674,7 @@ def build_academic_pdf(pdf_path, rep_dir):
     print(f"Successfully generated clean Academic PDF at: {pdf_path}")
 
 if __name__ == '__main__':
+    import shutil
     workspace = r"c:\Users\ammar\OneDrive\Desktop\Firewall"
     rep_dir = os.path.join(workspace, "reports")
     docx_out = os.path.join(rep_dir, "Sentinel_Firewall_Project_Report.docx")
@@ -1679,3 +1682,16 @@ if __name__ == '__main__':
     
     build_academic_docx(docx_out, rep_dir)
     build_academic_pdf(pdf_out, rep_dir)
+
+    # Save as 'TAE 2 (Minor)' in both workspace root and reports directory
+    tae_docx_root = os.path.join(workspace, "TAE 2 (Minor).docx")
+    tae_pdf_root = os.path.join(workspace, "TAE 2 (Minor).pdf")
+    tae_docx_rep = os.path.join(rep_dir, "TAE 2 (Minor).docx")
+    tae_pdf_rep = os.path.join(rep_dir, "TAE 2 (Minor).pdf")
+
+    shutil.copyfile(docx_out, tae_docx_root)
+    shutil.copyfile(pdf_out, tae_pdf_root)
+    shutil.copyfile(docx_out, tae_docx_rep)
+    shutil.copyfile(pdf_out, tae_pdf_rep)
+
+    print(f"Successfully saved copies as 'TAE 2 (Minor).docx' and 'TAE 2 (Minor).pdf' in {workspace}")
