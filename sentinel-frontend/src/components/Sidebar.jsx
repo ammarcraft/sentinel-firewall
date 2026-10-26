@@ -60,8 +60,8 @@ export default function Sidebar({
 
       {/* Sidebar Nav Items */}
       <div className="p-3 space-y-1.5 flex-1">
-        <div className="text-[10px] font-semibold uppercase text-slate-400 px-3 py-1 tracking-wider">
-          Views
+        <div className="text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500 px-3 py-1.5 tracking-wider">
+          Menu
         </div>
 
         {/* View 1: Live Monitor */}

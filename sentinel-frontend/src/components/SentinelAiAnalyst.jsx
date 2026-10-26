@@ -9,19 +9,20 @@ import {
   AlertTriangle,
   Radio,
   Trash2,
-  Maximize2,
-  Minimize2,
-  ChevronRight,
   Terminal,
   Activity,
   Zap,
-  HelpCircle
+  KeyRound,
+  Settings,
+  ChevronRight,
+  ExternalLink,
+  Cpu
 } from 'lucide-react';
 
 export default function SentinelAiAnalyst({
   isOpen,
   onToggle,
-  isDarkMode,
+  isDarkMode = false,
   logs = [],
   rules = [],
   threatEvents = [],
@@ -33,19 +34,28 @@ export default function SentinelAiAnalyst({
   externalQuery = null,
   onClearExternalQuery = null
 }) {
+  // Messages State
   const [messages, setMessages] = useState([
     {
       id: 'msg-init',
       sender: 'analyst',
       timestamp: new Date().toLocaleTimeString(),
-      text: `Hello Operator. I am **Sentinel AI Analyst**, your automated Netfilter & eBPF forensic intelligence assistant. I am continuously correlating deep packet frames and heuristic signature feeds in real-time. Ask me anything about suspicious IPs, attack vectors, or recommended firewall hardening policies.`
+      text: `Hello Operator. I am **Sentinel AI Analyst**, your autonomous SecOps & Netfilter forensic intelligence copilot. I am actively correlating kernel socket telemetry, heuristic threat signatures, and packet frames in real-time.
+
+You can ask me to perform deep packet investigations, analyze suspicious IPs, or recommend iptables policy hardening.`
     }
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Auto scroll chat to bottom
+  // API Key Settings Modal State
+  const [showSettings, setShowSettings] = useState(false);
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem('sentinel_ai_provider') || 'local');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('sentinel_ai_key') || '');
+  const [apiSaveSuccess, setApiSaveSuccess] = useState(false);
+
+  // Auto-scroll chat to bottom
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -60,7 +70,7 @@ export default function SentinelAiAnalyst({
     }
   }, [externalQuery]);
 
-  // Derive live telemetry insights
+  // Derived real-time telemetry metrics
   const droppedLogs = logs.filter((l) => l.action === 'DROP');
   const allowedLogs = logs.filter((l) => l.action === 'ALLOW');
   const activeAttackerIps = [
@@ -73,147 +83,183 @@ export default function SentinelAiAnalyst({
     (r) => (r.ip === primaryAttacker || r.ip === '0.0.0.0/0') && r.action === 'DROP' && r.status === 'ACTIVE'
   );
 
-  // Context-aware intelligent AI forensic response generator
-  const generateForensicResponse = (query) => {
+  // Save API Key Configuration
+  const handleSaveApiSettings = (e) => {
+    e.preventDefault();
+    localStorage.setItem('sentinel_ai_provider', aiProvider);
+    localStorage.setItem('sentinel_ai_key', apiKey.trim());
+    setApiSaveSuccess(true);
+    setTimeout(() => {
+      setApiSaveSuccess(false);
+      setShowSettings(false);
+    }, 1200);
+  };
+
+  // -------------------------------------------------------------
+  // Real LLM API Dispatch (Google Gemini / Gemma or DeepSeek)
+  // -------------------------------------------------------------
+  const queryExternalLLM = async (userPrompt) => {
+    const cleanKey = (apiKey || '').trim();
+    if (!cleanKey || aiProvider === 'local') return null;
+
+    const liveContext = `
+[SYSTEM CONTEXT: Sentinel Netfilter Linux Firewall Kernel]
+- Primary Ingress Attacker: ${primaryAttacker} (${isPrimaryBlocked ? 'CONTAINED via DROP rule' : 'ACTIVE / UNCONTAINED'})
+- Active Packet Rate: ${(packetRate / 1000).toFixed(1)}k pps | Wire Throughput: ${throughput} Gbps
+- Monitored Frames: ${logs.length} Total (${droppedLogs.length} Dropped, ${allowedLogs.length} Allowed)
+- Active Netfilter Rules: ${rules.map((r) => `${r.id}: ${r.ip}:${r.port} [${r.action}]`).join(', ')}
+- Heuristic IDS Signatures: ${threatEvents.slice(0, 5).map((t) => `${t.vector} (${t.severity}) from ${t.attackerIp} on port ${t.targetPort}`).join('; ') || 'Baseline Normal'}
+- Simulation Engine: ${isAttackActive ? `Active ${activeScenario?.name || 'SYN Flood'}` : 'Passive Wire-Speed Capture'}
+
+Analyze the operator's query professionally as an elite Senior SecOps Engineer. Be technical, direct, and concise. Format with clear Markdown headings and code blocks. If firewall mitigation is needed, provide exact \`iptables -A INPUT ...\` commands.`;
+
+    try {
+      if (aiProvider === 'gemini' || aiProvider === 'gemma') {
+        // Google AI Studio API (Gemini / Gemma)
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cleanKey}`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${liveContext}\n\nOperator Query: ${userPrompt}` }]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 600
+            }
+          })
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text;
+      } else if (aiProvider === 'deepseek') {
+        // DeepSeek API
+        const endpoint = 'https://api.deepseek.com/chat/completions';
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${cleanKey}`
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role: 'system', content: liveContext },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.2
+          })
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content;
+      }
+    } catch (err) {
+      console.warn('External AI API call failed, falling back to local forensic engine:', err);
+      return null;
+    }
+  };
+
+  // -------------------------------------------------------------
+  // Advanced Local Forensic Intelligence Engine (Zero Latency Fallback)
+  // -------------------------------------------------------------
+  const generateLocalForensicResponse = (query) => {
     const q = query.toLowerCase();
 
-    // 0. Specific IP Forensics & Geolocation Dossier (Triggered by Geo Tracker or Direct IP Queries)
+    // Match IP address query
     const ipMatch = query.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
-    if ((ipMatch && !q.includes('why was ip 192.168.1.105')) || q.includes('geo') || q.includes('country') || q.includes('asn') || q.includes('dossier')) {
+    if (ipMatch || q.includes('geo') || q.includes('country') || q.includes('who') || q.includes('ip') || q.includes('attacker')) {
       const targetIp = ipMatch ? ipMatch[0] : primaryAttacker;
       const isTargetBlocked = rules.some((r) => r.ip === targetIp && r.action === 'DROP');
       const ipThreats = threatEvents.filter((t) => t.attackerIp === targetIp);
-      const isTor = targetIp.includes('185.220');
-      const isLinode = targetIp.includes('45.33');
       const isInternal = targetIp.startsWith('192.168.') || targetIp.startsWith('10.');
+      const isTor = targetIp.includes('185.220');
 
-      return `### 🌐 Deep IP Forensic & Origin Geolocation Dossier
+      return `### 🌐 Ingress Forensic Dossier: \`${targetIp}\`
 
-**Target Host / IP:** \`${targetIp}\`  
-**Threat Status:** ${isTargetBlocked ? '🛡️ **CONTAINED (DROP Policy Enforced)**' : '⚠️ **SUSPICIOUS INGRESS / ACTIVE**'}  
-**Origin Classification:** ${isInternal ? 'Internal Subnet (RFC 1918 Private LAN - Local Adversary)' : isTor ? 'Tor Anonymized Exit Node (Frankfurt, Germany - AS205100)' : isLinode ? 'Akamai / Linode Cloud VPS (Dallas, USA - AS63949)' : 'External Ingress Transit'}  
+**Host Assessment:** ${isTargetBlocked ? '🛡️ **CONTAINED (DROP Rule Active)**' : '⚠️ **SUSPICIOUS / ACTIVE ADVERSARY**'}  
+**Origin Classification:** ${isInternal ? 'Internal Subnet (RFC 1918 Private LAN - Local Adversary Host)' : isTor ? 'Tor Exit Node (Frankfurt, Germany - AS205100)' : 'External Ingress Transit'}  
+**Threat Vector:** ${ipThreats[0]?.vector || (isAttackActive ? activeScenario?.name : 'Horizontal TCP SYN Flood & Port Reconnaissance')}  
+**Targeted Ports:** ${ipThreats.map((t) => t.targetPort).join(', ') || '443 (HTTPS), 80 (HTTP), 22 (SSH)'}
 
-#### 📋 Ingress Heuristic Profiling:
-* **Identified Vector:** ${ipThreats[0]?.vector || 'Automated TCP Port Reconnaissance & Socket Scan'}
-* **Target Ports:** ${ipThreats.map((t) => t.targetPort).join(', ') || '22 (SSH), 80 (HTTP), 443 (HTTPS), 3389 (RDP)'}
-* **Heuristic Confidence Score:** ${isTor ? '98%' : isInternal ? '96%' : '86%'} (High Anomaly Index)
-* **Autonomous System:** ${isTor ? 'AS205100 (Tor Project Node)' : isLinode ? 'AS63949 (Linode LLC)' : isInternal ? 'Private LAN' : 'Tier-1 Carrier Gateway'}
+#### 📋 Technical Determination:
+Kernel socket probes detected high-velocity TCP connection initiation frames without completion handshakes.
+* **Observed Velocity:** ~${isAttackActive ? '2,850' : '480'} frames/sec
+* **MITRE ATT&CK:** T1498.001 (Direct Network Flood)
 
-#### 🛡️ Mitigation Recommendation:
+#### 🛡️ Recommended Policy Action:
 ${
   isTargetBlocked
-    ? `The firewall is already dropping all packets from \`${targetIp}\` at the Netfilter ingress chain.`
-    : `Execute perimeter null-route for \`${targetIp}\`. Click **Commit DROP Rule** below to isolate host.`
+    ? `Host \`${targetIp}\` is already isolated at the Netfilter ingress chain.`
+    : `Execute perimeter null-route for host \`${targetIp}\`. Click the **Commit DROP Rule** button below.`
 }`;
     }
 
-    // 1. "Why was this IP blocked?" or specific IP question
-    if (q.includes('why') && (q.includes('ip') || q.includes('blocked') || q.includes('flagged') || q.includes('192.168.1.105'))) {
-      const targetIp = activeAttackerIps.find((ip) => q.includes(ip.toLowerCase())) || primaryAttacker;
-      const ipThreats = threatEvents.filter((t) => t.attackerIp === targetIp);
-      const isBlocked = rules.some((r) => r.ip === targetIp && r.action === 'DROP');
-      const recentPackets = logs.filter((l) => l.srcIp === targetIp);
+    // Mitigation & Rules Query
+    if (q.includes('rule') || q.includes('mitigat') || q.includes('block') || q.includes('iptables') || q.includes('harden')) {
+      return `### 🛡️ Sentinel Netfilter Hardening Directives
 
-      return `### Forensic Incident Report: IP \`${targetIp}\`
+Based on active deep packet correlation:
 
-**Classification:** High-Risk Adversarial Source  
-**Threat Status:** ${isBlocked ? '🛡️ **CONTAINED (DROP Rule Active)**' : '⚠️ **ACTIVE / UNCONTAINED**'}  
-**MITRE ATT&CK Mapping:** ${activeScenario?.mitreTechnique || 'T1498.001 (Direct Network Flood) & T1046 (Network Service Discovery)'}
-
-#### 📋 Observed Attack Telemetry:
-* **Vector Identified:** ${ipThreats[0]?.vector || (isAttackActive ? activeScenario?.name : 'Horizontal TCP SYN Flood & Port Reconnaissance')}
-* **Target Ports:** ${ipThreats.map((t) => t.targetPort).join(', ') || '21, 22, 23, 80, 443, 445, 3389'}
-* **Packet Volume:** Intercepted **${recentPackets.length} frames** (${recentPackets.filter((p) => p.action === 'DROP').length} dropped)
-* **Protocol Fingerprint:** High-frequency \`TCP [SYN]\` frames without corresponding \`ACK\` completion, indicating half-open socket table exhaustion intent.
-
-#### 💡 Forensic Determination:
-The host exceeded the kernel heuristic threshold of **1,200 probes/sec**. ${
-        isBlocked
-          ? `An active firewall DROP policy is currently discarding all ingress frames at the ingress interface hook before reaching user space.`
-          : `**Immediate Mitigation Recommended:** Click the **Auto-Block IP** button below or in the IDS feed to commit an iptables DROP rule.`
-      }`;
-    }
-
-    // 2. "Show attack vector breakdown" or "What attacks are active?"
-    if (q.includes('vector') || q.includes('breakdown') || q.includes('scenario') || q.includes('attack')) {
-      const synCount = threatEvents.filter((t) => t.vector?.toLowerCase().includes('syn')).length;
-      const scanCount = threatEvents.filter((t) => t.vector?.toLowerCase().includes('scan') || t.vector?.toLowerCase().includes('recon')).length;
-      const bruteCount = threatEvents.filter((t) => t.vector?.toLowerCase().includes('brute')).length;
-
-      return `### 📊 Real-Time Attack Vector & Anomaly Distribution
-
-Current wire-speed telemetry reflects **${threatEvents.length} detected security signatures**:
-
-| Attack Vector | Category | Severity | Probes / Sec | Containment |
-| :--- | :--- | :--- | :--- | :--- |
-| **TCP SYN Flood** | DoS Exhaustion | **CRITICAL** | ~2,850 pps | ${isPrimaryBlocked ? 'Contained' : 'Active'} |
-| **Port Reconnaissance** | Discovery (T1046) | **HIGH** | ~1,420 pps | Active Monitoring |
-| **SSH/RDP Brute-Force** | Credential Access | **HIGH** | ~480 pps | Rate-Limited |
-| **DNS Reflection** | Bandwidth Saturation | **MEDIUM** | ~2,100 pps | Filtered |
-
-**Ingress Throughput:** ${(throughput || 2.4).toFixed(2)} Gbps • **Packet Velocity:** ${(packetRate / 1000).toFixed(1)}k pps  
-**Forensic Note:** Layer 4 TCP SYN floods constitute **${isAttackActive ? '78%' : '14%'}** of inbound anomalous frame distribution.`;
-    }
-
-    // 3. "What rules should I deploy?" or "Suggest mitigation"
-    if (q.includes('rule') || q.includes('mitigat') || q.includes('suggest') || q.includes('recommend') || q.includes('policy')) {
-      const unblockedThreats = threatEvents.filter(
-        (t) => !rules.some((r) => r.ip === t.attackerIp && r.action === 'DROP')
-      );
-
-      return `### 🛡️ Sentinel AI Policy Hardening Recommendations
-
-Based on heuristic packet inspection and zero-trust perimeter baselines:
-
-1. **Deploy Perimeter Drop for Host \`${primaryAttacker}\`:**
+1. **Perimeter Drop Directive for Attacker \`${primaryAttacker}\`:**
    \`\`\`bash
+   # Null-route all inbound frames from adversary host
    iptables -A INPUT -s ${primaryAttacker} -j DROP
    \`\`\`
-   *Rationale:* Eliminates half-open connection memory consumption on port 443/80.
 
-2. **SYN Flood Protection & Cookie Validation:**
-   Enable TCP Syncookies in kernel sysctl to absorb SYN bursts without table depletion:
-   \`net.ipv4.tcp_syncookies = 1\`
+2. **SYN Flood Cookie Defense:**
+   \`\`\`bash
+   # Prevent socket table memory exhaustion in kernel sysctl
+   sysctl -w net.ipv4.tcp_syncookies=1
+   \`\`\`
 
-3. **Rate-Limit Administrative Ports (22 SSH, 3389 RDP):**
-   Restrict management access to authorized bastion CIDR subnets rather than \`0.0.0.0/0\`.
+3. **Rate Limit Inbound Handshakes on Port 443:**
+   \`\`\`bash
+   iptables -A INPUT -p tcp --dport 443 -m state --state NEW -m limit --limit 50/s --limit-burst 100 -j ACCEPT
+   \`\`\`
 
-4. **Default Gateway Status:**
-   Active rule **FW-1** is permitting legitimate HTTPS (\`0.0.0.0/0:443\`) with **${rules.find((r) => r.id === 'FW-1')?.hits || 0} recorded hits**.`;
+Active rule **FW-1** (\`0.0.0.0/0:443 ALLOW\`) is operating with **${rules.find((r) => r.id === 'FW-1')?.hits || 0} recorded hits**.`;
     }
 
-    // 4. "Summarize security posture" or "Status / Health"
-    if (q.includes('posture') || q.includes('health') || q.includes('summary') || q.includes('audit') || q.includes('status')) {
-      const dropRate = logs.length > 0 ? Math.round((droppedLogs.length / logs.length) * 100) : 0;
-      return `### 📈 Sentinel Security Posture & Health Assessment
+    // Health / Status / Traffic Audit Query
+    if (q.includes('status') || q.includes('audit') || q.includes('posture') || q.includes('traffic') || q.includes('safe') || q.includes('health')) {
+      const dropPct = logs.length > 0 ? Math.round((droppedLogs.length / logs.length) * 100) : 0;
+      return `### 📈 Wire-Speed Telemetry & Security Audit
 
-**Operational State:** ${isAttackActive ? '🚨 **ELEVATED THREAT LEVEL (Active Intrusion)**' : '🟢 **NOMINAL SECURE BASELINE**'}  
-**Kernel Inspection:** Linux Netfilter eBPF XDP Map • **Driver Latency:** 0.84ms
-
-* **Total Monitored Packets:** ${logs.length.toLocaleString()} frames
-* **Allowed vs Dropped:** ${allowedLogs.length} Allowed (**${100 - dropRate}%**) vs ${droppedLogs.length} Dropped (**${dropRate}%**)
-* **Active Firewall Policies:** ${rules.length} rules loaded in kernel memory
-* **IDS Signature Feed:** ${threatEvents.length} events logged across ${activeAttackerIps.length} remote host(s)
-* **Firewall Containment Efficiency:** ${isPrimaryBlocked ? '100% (Attacker Dropped at Wire)' : 'Pending Drop Commitment'}`;
+* **System Status:** ${isAttackActive ? '🚨 **ELEVATED INTRUSION PRESSURE**' : '🟢 **NOMINAL SECURE BASELINE**'}
+* **Throughput:** ${(throughput || 2.4).toFixed(2)} Gbps @ ${(packetRate / 1000).toFixed(1)}k pps
+* **Processed Frames:** ${logs.length} Total (${droppedLogs.length} Dropped [${dropPct}%], ${allowedLogs.length} Allowed)
+* **Active Firewall Rules:** ${rules.length} policies enforced in kernel memory
+* **IDS Signature Feeds:** ${threatEvents.length} events logged across ${activeAttackerIps.length} remote host(s)
+* **Adversary Containment:** ${isPrimaryBlocked ? '100% (Attacker Null-Routed)' : 'Action Required: Pending Drop Commitment'}`;
     }
 
-    // 5. General Fallback with technical forensic expertise
-    return `### 🔍 Sentinel Security Analysis
+    // General Technical Security Query Fallback
+    return `### 🔍 Sentinel Security Intelligence
 
-I evaluated your query: *"${query}"* against the active kernel socket telemetry.
+Analysis of query: *"${query}"* against active wire telemetry:
 
-* **Monitored Ingress:** ${(throughput || 2.4).toFixed(2)} Gbps on interface \`eth0\`
-* **Active Rules:** ${rules.length} policies enforced (${rules.filter((r) => r.action === 'DROP').length} DROP, ${rules.filter((r) => r.action === 'ALLOW').length} ALLOW)
-* **Detected Adversary Sources:** ${activeAttackerIps.join(', ') || 'None (Normal Baseline)'}
-* **Heuristic Engine Status:** ${isAttackActive ? 'Under simulated intrusion pressure' : 'Nominal wire-speed monitoring'}
+* **Active Ingress Attacker:** \`${primaryAttacker}\` (${isPrimaryBlocked ? 'BLOCKED' : 'MONITORED'})
+* **Monitored Interface:** \`eth0\` / Host Primary Interface
+* **Firewall Rules Enforced:** ${rules.length} active Netfilter rules (${rules.filter((r) => r.action === 'DROP').length} DROP, ${rules.filter((r) => r.action === 'ALLOW').length} ALLOW)
+* **Traffic Filter Status:** ${isAttackActive ? 'Active attack scenario in progress' : 'Passive wire-speed capture'}
 
-You can ask me to:
-1. Explain specific threat signatures (e.g., *"Why was 192.168.1.105 flagged?"*)
-2. Generate MITRE ATT&CK tactical breakdowns
-3. Recommend firewall rules to harden the perimeter`;
+Ask me:
+1. *"Why is 192.168.1.105 flagged?"*
+2. *"What firewall rules should I deploy?"*
+3. *"Perform live traffic audit"*`;
   };
 
-  const handleSendMessage = (textToSend) => {
+  // -------------------------------------------------------------
+  // Send Message Handler
+  // -------------------------------------------------------------
+  const handleSendMessage = async (textToSend) => {
     const query = textToSend || inputText;
     if (!query.trim()) return;
 
@@ -228,20 +274,35 @@ You can ask me to:
     setInputText('');
     setIsTyping(true);
 
-    // Realistic responsive typing delay
-    setTimeout(() => {
-      const botResponseText = generateForensicResponse(query.trim());
-      const botMsg = {
-        id: `msg-${Date.now() + 1}`,
-        sender: 'analyst',
-        timestamp: new Date().toLocaleTimeString(),
-        text: botResponseText,
-        canAutoBlock: !isPrimaryBlocked && (query.toLowerCase().includes('why') || query.toLowerCase().includes('mitigat')),
-        suggestedIp: primaryAttacker
-      };
-      setMessages((prev) => [...prev, botMsg]);
-      setIsTyping(false);
-    }, 450);
+    // 1. Try real external LLM API if key is configured
+    let aiResponseText = null;
+    if (apiKey && aiProvider !== 'local') {
+      aiResponseText = await queryExternalLLM(query.trim());
+    }
+
+    // 2. Fall back to local forensic engine if no key or API failed
+    if (!aiResponseText) {
+      await new Promise((res) => setTimeout(res, 350));
+      aiResponseText = generateLocalForensicResponse(query.trim());
+    }
+
+    const botMsg = {
+      id: `msg-${Date.now() + 1}`,
+      sender: 'analyst',
+      timestamp: new Date().toLocaleTimeString(),
+      text: aiResponseText,
+      canAutoBlock:
+        !isPrimaryBlocked &&
+        (query.toLowerCase().includes('why') ||
+          query.toLowerCase().includes('mitigat') ||
+          query.toLowerCase().includes('block') ||
+          query.toLowerCase().includes('who') ||
+          query.toLowerCase().includes('192.168.1.105')),
+      suggestedIp: primaryAttacker
+    };
+
+    setMessages((prev) => [...prev, botMsg]);
+    setIsTyping(false);
   };
 
   const handleClearChat = () => {
@@ -256,10 +317,10 @@ You can ask me to:
   };
 
   const quickPromptChips = [
-    { label: '🔍 Why is 192.168.1.105 flagged?', query: 'Why was IP 192.168.1.105 flagged as malicious?' },
-    { label: '📊 Attack vector breakdown', query: 'Show attack vector breakdown and threat distribution' },
-    { label: '🛡️ Recommend mitigation rules', query: 'What firewall rules should I deploy to mitigate threats?' },
-    { label: '📈 Security posture summary', query: 'Summarize current firewall security posture and telemetry' }
+    { label: '🔍 Investigate 192.168.1.105', query: 'Why was IP 192.168.1.105 flagged as malicious?' },
+    { label: '🛡️ Generate iptables rules', query: 'What firewall rules should I deploy to mitigate threats?' },
+    { label: '📊 Real-time attack breakdown', query: 'Show attack vector breakdown and threat distribution' },
+    { label: '📈 Wire-speed audit summary', query: 'Summarize current firewall security posture and telemetry' }
   ];
 
   return (
@@ -275,13 +336,13 @@ You can ask me to:
                 ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-500 ring-4 ring-red-500/30 animate-pulse'
                 : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400/30 hover:shadow-blue-500/25 ring-2 ring-blue-500/20'
           }`}
-          title="Open Sentinel AI Analyst & Forensic Chatbot"
+          title="Open Sentinel AI Copilot"
         >
           <div className="relative">
             <Bot className="w-5 h-5" />
             <Sparkles className="w-2.5 h-2.5 text-amber-300 absolute -top-1 -right-1 animate-ping" />
           </div>
-          <span className="text-xs font-bold tracking-tight">Sentinel AI Analyst</span>
+          <span className="text-xs font-bold tracking-tight">Sentinel Copilot</span>
           {isAttackActive && (
             <span className="text-[10px] bg-white text-red-700 font-extrabold px-1.5 py-0.5 rounded-full uppercase">
               Threat Active
@@ -290,9 +351,9 @@ You can ask me to:
         </button>
       </div>
 
-      {/* Slide-Over AI Analyst Panel */}
+      {/* Slide-Over AI Copilot Drawer */}
       {isOpen && (
-        <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] flex flex-col shadow-2xl border-l transition-all duration-300 ease-in-out bg-slate-900 border-slate-800 text-slate-100">
+        <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[490px] flex flex-col shadow-2xl border-l transition-all duration-300 ease-in-out bg-slate-900 border-slate-800 text-slate-100">
           {/* Header */}
           <div className="p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
@@ -301,219 +362,231 @@ You can ask me to:
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm text-white">Sentinel AI Analyst</h3>
-                  <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    eBPF RAG Active
+                  <h3 className="font-bold text-sm text-white">Sentinel AI Copilot</h3>
+                  <span
+                    className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-mono border ${
+                      apiKey && aiProvider !== 'local'
+                        ? 'text-amber-400 bg-amber-950/60 border-amber-800/80'
+                        : 'text-emerald-400 bg-emerald-950/60 border-emerald-800/80'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                    {apiKey && aiProvider !== 'local' ? `${aiProvider.toUpperCase()} LLM` : 'Local Engine'}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Autonomous threat assessment & live log forensics engine
+                  Autonomous threat assessment & live wire-speed forensics
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
+              {/* Settings Button */}
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-1.5 rounded-lg transition cursor-pointer ${
+                  showSettings ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}
+                title="Configure LLM API Key (Gemma / Gemini / DeepSeek)"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+
+              {/* Clear Chat Button */}
               <button
                 onClick={handleClearChat}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition cursor-pointer"
-                title="Reset Forensic Chat"
+                title="Reset Chat Stream"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-4 h-4" />
               </button>
+
+              {/* Close Button */}
               <button
                 onClick={onToggle}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-                title="Close AI Drawer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition cursor-pointer"
+                title="Close Copilot Drawer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Real-time Threat Assessment Status Card */}
-          <div className="p-3.5 border-b border-slate-800 bg-slate-900/90 shrink-0">
-            <div
-              className={`p-3 rounded-xl border text-xs space-y-2 ${
-                isAttackActive
-                  ? 'bg-red-950/40 border-red-800/80 text-red-200'
-                  : isPrimaryBlocked
-                    ? 'bg-emerald-950/30 border-emerald-800/80 text-emerald-200'
-                    : 'bg-slate-850 border-slate-700/80 text-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between font-bold text-[11px] uppercase tracking-wider">
-                <span className="flex items-center gap-1.5">
-                  {isAttackActive ? (
-                    <AlertTriangle className="w-3.5 h-3.5 text-red-400 animate-pulse" />
-                  ) : isPrimaryBlocked ? (
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Activity className="w-3.5 h-3.5 text-blue-400" />
-                  )}
-                  {isAttackActive
-                    ? 'Elevated Threat Condition'
-                    : isPrimaryBlocked
-                      ? 'Threat Contained by Policy'
-                      : 'Perimeter Baseline Nominal'}
+          {/* AI Settings Popover (When user clicks Gear) */}
+          {showSettings && (
+            <div className="p-4 bg-slate-950 border-b border-slate-800 text-xs space-y-3 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-white flex items-center gap-1.5">
+                  <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                  <span>AI Intelligence Provider Settings</span>
                 </span>
-                <span className="font-mono text-[10px]">
-                  {isAttackActive ? 'Score: 98/100 (Crit)' : 'Score: 12/100 (Safe)'}
-                </span>
+                <span className="text-[10px] text-slate-400">Gemma / Gemini / DeepSeek</span>
               </div>
 
-              <p className="text-[11px] leading-relaxed opacity-90">
-                {isAttackActive
-                  ? `Active ${activeScenario?.name || 'TCP SYN flood'} incoming from ${primaryAttacker}. ${droppedLogs.length} dropped frames recorded.`
-                  : isPrimaryBlocked
-                    ? `Perimeter rule actively intercepting traffic from ${primaryAttacker}. Ingress is sanitized.`
-                    : `Zero critical anomalies detected on interface eth0. All ${logs.length} packet frames adhering to nominal baseline.`}
-              </p>
+              <form onSubmit={handleSaveApiSettings} className="space-y-3">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { id: 'local', label: 'Local Engine' },
+                    { id: 'gemini', label: 'Gemma / Gemini' },
+                    { id: 'deepseek', label: 'DeepSeek' }
+                  ].map((prov) => (
+                    <button
+                      key={prov.id}
+                      type="button"
+                      onClick={() => setAiProvider(prov.id)}
+                      className={`py-1.5 px-2 rounded-lg font-semibold text-[11px] border transition cursor-pointer ${
+                        aiProvider === prov.id
+                          ? 'bg-blue-600 text-white border-blue-500'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      {prov.label}
+                    </button>
+                  ))}
+                </div>
 
-              {!isPrimaryBlocked && isAttackActive && onAutoBlock && (
-                <div className="pt-1 flex items-center justify-between border-t border-red-900/60">
-                  <span className="text-[10px] text-red-300 font-medium">Recommended: Drop host traffic</span>
+                {aiProvider !== 'local' && (
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      {aiProvider === 'gemini' ? 'Google AI Studio API Key (Gemini / Gemma):' : 'DeepSeek API Key:'}
+                    </label>
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder={aiProvider === 'gemini' ? 'AIzaSy...' : 'sk-...'}
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-slate-500">
+                    {apiSaveSuccess ? '✅ Settings saved!' : 'Stored safely in local browser storage'}
+                  </span>
                   <button
-                    onClick={() => onAutoBlock(primaryAttacker, activeScenario?.name || 'AI-Mitigated Attack')}
-                    className="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1 shadow-sm"
+                    type="submit"
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition cursor-pointer"
                   >
-                    <ShieldAlert className="w-3 h-3" />
-                    <span>Auto-Block {primaryAttacker}</span>
+                    Save Provider
                   </button>
                 </div>
-              )}
+              </form>
+            </div>
+          )}
+
+          {/* Real-Time Live Status Bar */}
+          <div className="px-4 py-2.5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between text-[11px]">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Primary Attacker:</span>
+              <span className="font-mono font-bold text-red-400">{primaryAttacker}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Dropped:</span>
+              <span className="font-mono font-bold text-red-500">{droppedLogs.length} pkts</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Rate:</span>
+              <span className="font-mono font-bold text-emerald-400">{(packetRate / 1000).toFixed(1)}k pps</span>
             </div>
           </div>
 
-          {/* Interactive Chat Stream */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar text-xs bg-slate-900/60">
+          {/* Chat Messages Stream */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar text-xs">
             {messages.map((msg) => {
-              const isBot = msg.sender === 'analyst';
+              const isAnalyst = msg.sender === 'analyst';
               return (
-                <div key={msg.id} className={`flex gap-2.5 ${isBot ? 'items-start' : 'justify-end'}`}>
-                  {isBot && (
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                      <Bot className="w-4 h-4" />
-                    </div>
-                  )}
+                <div
+                  key={msg.id}
+                  className={`flex flex-col ${isAnalyst ? 'items-start' : 'items-end'}`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] text-slate-400">
+                    <span>{isAnalyst ? 'Sentinel Copilot' : 'Operator'}</span>
+                    <span>•</span>
+                    <span>{msg.timestamp}</span>
+                  </div>
 
                   <div
-                    className={`rounded-2xl p-3.5 max-w-[88%] leading-relaxed ${
-                      isBot
-                        ? 'bg-slate-800 text-slate-200 border border-slate-700/80 shadow-sm'
+                    className={`p-3.5 rounded-2xl max-w-[92%] leading-relaxed whitespace-pre-line ${
+                      isAnalyst
+                        ? 'bg-slate-950/90 border border-slate-800 text-slate-200'
                         : 'bg-blue-600 text-white shadow-md'
                     }`}
                   >
-                    <div className="prose prose-invert prose-xs max-w-none space-y-2">
-                      {msg.text.split('\n\n').map((paragraph, idx) => {
-                        if (paragraph.startsWith('### ')) {
-                          return (
-                            <h4 key={idx} className="font-bold text-sm text-blue-400 mt-1 mb-1">
-                              {paragraph.replace('### ', '')}
-                            </h4>
-                          );
-                        }
-                        if (paragraph.startsWith('#### ')) {
-                          return (
-                            <h5 key={idx} className="font-semibold text-xs text-slate-300 mt-2 mb-1">
-                              {paragraph.replace('#### ', '')}
-                            </h5>
-                          );
-                        }
-                        return (
-                          <div
-                            key={idx}
-                            dangerouslySetInnerHTML={{
-                              __html: paragraph
-                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                .replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded bg-slate-900 text-blue-300 font-mono text-[10px]">$1</code>')
-                                .replace(/^\* (.*$)/gim, '• $1')
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
+                    {msg.text}
 
-                    {msg.canAutoBlock && onAutoBlock && (
-                      <div className="mt-3 pt-2.5 border-t border-slate-700 flex justify-end">
+                    {/* 1-Click Action to Commit DROP Rule directly from AI response */}
+                    {isAnalyst && msg.canAutoBlock && onAutoBlock && (
+                      <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-red-400 font-mono">
+                          Adversary: {msg.suggestedIp || primaryAttacker}
+                        </span>
                         <button
-                          onClick={() => onAutoBlock(msg.suggestedIp, 'AI Suggested Drop Rule')}
-                          className="bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                          onClick={() =>
+                            onAutoBlock(
+                              msg.suggestedIp || primaryAttacker,
+                              'AI Copilot Direct Mitigation'
+                            )
+                          }
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                         >
                           <ShieldAlert className="w-3.5 h-3.5" />
-                          <span>Commit DROP Rule for {msg.suggestedIp}</span>
+                          <span>Commit DROP Rule</span>
                         </button>
                       </div>
                     )}
-
-                    <div className="text-[9px] text-slate-400 font-mono text-right mt-1.5 opacity-60">
-                      {msg.timestamp}
-                    </div>
                   </div>
                 </div>
               );
             })}
 
             {isTyping && (
-              <div className="flex items-center gap-2 text-slate-400 text-xs italic py-2 pl-9">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" />
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:0.2s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:0.4s]" />
-                <span>Sentinel AI is analyzing telemetry frames...</span>
+              <div className="flex items-center gap-2 p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-slate-400 text-xs w-36">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
+                <span>Correlating telemetry...</span>
               </div>
             )}
-
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick-Prompt Pills */}
-          <div className="p-2.5 border-t border-slate-800 bg-slate-950/80 shrink-0">
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              <span>Suggested Forensic Inquiries</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {quickPromptChips.map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSendMessage(chip.query)}
-                  className="text-[10px] font-medium bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700/80 px-2.5 py-1 rounded-full transition cursor-pointer flex items-center gap-1"
-                >
-                  <span>{chip.label}</span>
-                </button>
-              ))}
-            </div>
+          {/* Quick Prompt Suggestion Chips */}
+          <div className="p-2.5 border-t border-slate-800 bg-slate-950/60 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {quickPromptChips.map((chip, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendMessage(chip.query)}
+                className="whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 transition cursor-pointer"
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
 
-          {/* Chat Input Bar */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="p-3 border-t border-slate-800 bg-slate-950 flex items-center gap-2 shrink-0"
-          >
-            <input
-              type="text"
-              placeholder="Ask Sentinel AI about IPs, attacks, or rules..."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            />
-            <button
-              type="submit"
-              disabled={!inputText.trim() || isTyping}
-              className={`p-2 rounded-xl transition cursor-pointer border ${
-                inputText.trim() && !isTyping
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500 shadow-sm'
-                  : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed opacity-50'
-              }`}
-              title="Send Inquiry"
+          {/* Query Input Box */}
+          <div className="p-3 border-t border-slate-800 bg-slate-950">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="flex items-center gap-2"
             >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Ask Copilot (e.g. 'Why is 192.168.1.105 flagged?')..."
+                className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition font-sans"
+              />
+              <button
+                type="submit"
+                disabled={!inputText.trim()}
+                className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white transition cursor-pointer shadow-sm"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </>

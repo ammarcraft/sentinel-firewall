@@ -633,6 +633,8 @@ export default function App() {
   const handleLiveNetworkPacket = useCallback(
     (rawPkt) => {
       if (!rawPkt || !rawPkt.srcIp) return;
+      // Filter out internal localhost loopback development noise
+      if (rawPkt.srcIp === '127.0.0.1' || rawPkt.dstIp === '127.0.0.1' || rawPkt.srcIp === rawPkt.dstIp) return;
 
       const { action, matchedRule } = evaluatePacketAgainstRules(
         rawPkt.srcIp,

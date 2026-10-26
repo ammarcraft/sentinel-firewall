@@ -1,30 +1,21 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import {
   Menu,
-  X,
   Activity,
-  Radio,
-  SlidersHorizontal,
-  Globe,
   Flame,
   Bot,
   Sun,
   Moon,
   Zap,
-  Shield,
-  ChevronDown
+  Radio,
+  Globe
 } from 'lucide-react';
 
 export default function Navbar({
   isDarkMode,
   setIsDarkMode,
   activeView,
-  setActiveView,
   onToggleSidebar,
-  totalPkts = 0,
-  threatsCount = 0,
-  rulesCount = 1,
-  geoNodesCount = 6,
   trafficMode = 'live',
   setTrafficMode,
   snifferStatus,
@@ -33,143 +24,31 @@ export default function Navbar({
   onOpenAttackConsole,
   onOpenAiAnalyst
 }) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const navItems = [
-    {
-      id: 'monitor',
-      label: 'Live Monitor',
-      icon: Activity,
-      count: `${totalPkts} pkts`,
-      badgeColor: 'text-blue-500 bg-blue-500/10'
-    },
-    {
-      id: 'ids',
-      label: 'Intrusion Detection (IDS)',
-      icon: Radio,
-      count: `${threatsCount} threats`,
-      badgeColor: threatsCount > 0 ? 'text-red-500 bg-red-500/10' : 'text-slate-400 bg-slate-500/10'
-    },
-    {
-      id: 'rules',
-      label: 'Policy & Rules',
-      icon: SlidersHorizontal,
-      count: `${rulesCount} rules`,
-      badgeColor: 'text-indigo-500 bg-indigo-500/10'
-    },
-    {
-      id: 'geo',
-      label: 'IP Geo Tracker',
-      icon: Globe,
-      count: `${geoNodesCount} nodes`,
-      badgeColor: 'text-amber-500 bg-amber-500/10'
-    }
-  ];
-
   return (
     <header
-      className={`h-16 border-b px-4 sm:px-6 flex items-center justify-between shrink-0 transition-colors z-30 relative ${
+      className={`h-16 border-b px-6 flex items-center justify-between shrink-0 transition-colors z-20 ${
         isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-gray-200 text-slate-900'
       }`}
     >
-      {/* Left Section: 3-Line Hamburger Menu & View Title */}
+      {/* Left Section: Optional Sidebar Toggle & View Title */}
       <div className="flex items-center gap-3">
-        {/* 3-Line Hamburger Menu Button with Dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        {onToggleSidebar && (
           <button
-            onClick={() => setIsDropdownOpen((prev) => !prev)}
+            onClick={onToggleSidebar}
             className={`p-2 rounded-lg border transition cursor-pointer flex items-center gap-1.5 ${
-              isDropdownOpen
-                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                : isDarkMode
-                  ? 'bg-slate-800 hover:bg-slate-750 text-slate-300 border-slate-700'
-                  : 'bg-gray-100 hover:bg-gray-200 text-slate-700 border-gray-300'
+              isDarkMode
+                ? 'bg-slate-800 hover:bg-slate-750 text-slate-300 border-slate-700'
+                : 'bg-gray-100 hover:bg-gray-200 text-slate-700 border-gray-300'
             }`}
-            title="Toggle Navigation Views Menu"
+            title="Toggle Sidebar Layout"
           >
-            {isDropdownOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            <span className="hidden sm:inline text-xs font-semibold">Views</span>
-            <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            <Menu className="w-4 h-4" />
+            <span className="text-xs font-semibold">Menu</span>
           </button>
-
-          {/* 3-Line Dropdown Menu Panel */}
-          {isDropdownOpen && (
-            <div
-              className={`absolute top-full left-0 mt-2 w-72 rounded-2xl border p-2 shadow-2xl z-50 transition-all duration-150 animate-in fade-in slide-in-from-top-2 ${
-                isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-gray-200 text-slate-900'
-              }`}
-            >
-              <div className="px-3 py-2 border-b border-gray-100 dark:border-slate-800 mb-1 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  Select SecOps View
-                </span>
-                <span className="text-[10px] text-blue-500 font-mono font-semibold">4 Active Modules</span>
-              </div>
-
-              <div className="space-y-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeView === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        if (setActiveView) setActiveView(item.id);
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition cursor-pointer border ${
-                        isActive
-                          ? isDarkMode
-                            ? 'bg-slate-800 text-blue-400 border-slate-700 shadow-sm'
-                            : 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                          : isDarkMode
-                            ? 'border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
-                            : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className="w-4 h-4" />
-                        <span>{item.label}</span>
-                      </div>
-                      <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
-                        {item.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {onToggleSidebar && (
-                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-slate-800">
-                  <button
-                    onClick={() => {
-                      onToggleSidebar();
-                      setIsDropdownOpen(false);
-                    }}
-                    className="w-full py-1.5 px-3 rounded-lg text-center text-[11px] font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition cursor-pointer"
-                  >
-                    Toggle Sidebar Layout
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Current View Breadcrumb / Title */}
-        <div className="hidden sm:block">
+        <div>
           <h2 className="text-sm font-bold tracking-tight">
             {activeView === 'monitor'
               ? 'Live Monitor & Threat Telemetry'
@@ -191,8 +70,8 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* Right Section: Mode Switcher, Attack Console, AI Analyst & Theme */}
-      <div className="flex items-center gap-2 sm:gap-2.5">
+      {/* Right Section: Mode Switcher, Attack Console, AI Copilot & Theme */}
+      <div className="flex items-center gap-2.5">
         {/* Mode Toggle: Simulation vs Live Network */}
         {setTrafficMode && (
           <div
@@ -248,7 +127,7 @@ export default function Navbar({
           <span className="hidden sm:inline">{isAttackActive ? 'Attack Active' : 'Attack Console'}</span>
         </button>
 
-        {/* Sentinel AI Analyst Trigger */}
+        {/* Sentinel AI Copilot Trigger */}
         {onOpenAiAnalyst && (
           <button
             onClick={onOpenAiAnalyst}
@@ -257,7 +136,7 @@ export default function Navbar({
                 ? 'bg-slate-800 hover:bg-slate-750 text-blue-400 border-slate-700'
                 : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
             }`}
-            title="Open Sentinel AI Analyst & Copilot"
+            title="Open Sentinel AI Copilot & Forensics"
           >
             <Bot className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">AI Copilot</span>

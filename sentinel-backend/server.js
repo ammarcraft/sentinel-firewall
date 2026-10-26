@@ -415,8 +415,16 @@ function sampleActiveOsSockets() {
         const state = parts[3];
 
         if (foreignAddr && !foreignAddr.includes('*:*') && !foreignAddr.includes('0.0.0.0')) {
-          const [srcIp, srcPort] = localAddr.split(':');
-          const [dstIp, dstPort] = foreignAddr.split(':');
+          const [srcIp, srcPortStr] = localAddr.split(':');
+          const [dstIp, dstPortStr] = foreignAddr.split(':');
+          const srcPort = parseInt(srcPortStr, 10) || 0;
+          const dstPort = parseInt(dstPortStr, 10) || 0;
+
+          // Strict filter: Exclude internal loopback and local development server ports (Vite 5173/5174, Backend 5000, MySQL 3306)
+          const isLoopback = srcIp === '127.0.0.1' || dstIp === '127.0.0.1' || srcIp === '::1' || dstIp === '::1' || srcIp === dstIp;
+          const isDevPort = [5173, 5174, 5000, 3306].includes(srcPort) || [5173, 5174, 5000, 3306].includes(dstPort);
+
+          if (isLoopback || isDevPort) continue; // Never broadcast noisy internal dev server socket traffic
 
           const socketKey = `${localAddr}->${foreignAddr}`;
           if (!lastSeenSockets.has(socketKey)) {
@@ -431,9 +439,9 @@ function sampleActiveOsSockets() {
               time: new Date().toLocaleTimeString(),
               proto: 'TCP',
               srcIp: srcIp || iface.ip,
-              srcPort: parseInt(srcPort) || 443,
+              srcPort: srcPort || 443,
               dstIp: dstIp || '1.1.1.1',
-              dstPort: parseInt(dstPort) || 443,
+              dstPort: dstPort || 443,
               len: Math.floor(64 + Math.random() * 512),
               source: 'OS_NETSTAT_BRIDGE',
               state: state || 'ESTABLISHED',
