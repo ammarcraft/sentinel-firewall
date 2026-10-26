@@ -108,7 +108,7 @@ export default function App() {
       return;
     }
 
-    if (username !== 'Ammar.K' || password !== 'hackAMR') {
+    if (username.trim().toLowerCase() !== 'ammar' || password.trim() !== 'hackAMR') {
       alert('❌ Access Denied: Invalid Username or Password!');
       return;
     }
@@ -168,7 +168,7 @@ export default function App() {
       return;
     }
 
-    if (username !== 'Ammar' || password !== 'hackAMR') {
+    if (username.trim().toLowerCase() !== 'ammar' || password.trim() !== 'hackAMR') {
       alert('❌ Access Denied: Invalid Username or Password!');
       return;
     }
@@ -385,11 +385,21 @@ export default function App() {
       proto = activeScenario?.protocol || 'TCP [SYN]';
       len = activeScenario?.packetSize || (proto.includes('HTTP') ? 1240 : 64);
     } else {
-      const normalIps = ['142.250.190.46', '172.217.16.206', '104.244.42.1', '185.199.108.153', '20.112.52.29'];
-      const normalPorts = [443, 80, 22, 53, 8080];
-      srcIp = normalIps[Math.floor(Math.random() * normalIps.length)];
-      dstPort = normalPorts[Math.floor(Math.random() * normalPorts.length)];
-      proto = dstPort === 53 ? 'UDP [DNS]' : 'TCP [ACK]';
+      const normalTrafficProfiles = [
+        { ip: '142.250.190.46', port: 443, proto: 'TLSv1.3' },
+        { ip: '1.1.1.1', port: 53, proto: 'UDP [DNS]' },
+        { ip: '104.244.42.1', port: 443, proto: 'HTTPS' },
+        { ip: '185.199.108.153', port: 443, proto: 'TCP [ACK]' },
+        { ip: '20.112.52.29', port: 443, proto: 'TLSv1.3' },
+        { ip: '8.8.8.8', port: 53, proto: 'UDP [DNS]' },
+        { ip: '151.101.65.140', port: 80, proto: 'TCP [ACK]' },
+        { ip: '52.95.120.67', port: 443, proto: 'QUIC / UDP' }
+      ];
+      const selectedProfile = normalTrafficProfiles[Math.floor(Math.random() * normalTrafficProfiles.length)];
+      srcIp = selectedProfile.ip;
+      dstPort = selectedProfile.port;
+      proto = selectedProfile.proto;
+      len = Math.floor(52 + Math.random() * 450);
     }
 
     const dstIp = '192.168.1.' + Math.floor(10 + Math.random() * 80);
@@ -629,6 +639,9 @@ export default function App() {
     return { action, matchedRule };
   }, []);
 
+  // Smooth packet ingestion queue to prevent batch bursts and ensure packets stream one-by-one
+  const packetQueueRef = useRef([]);
+
   // Ingest Real Live Network Packet from Backend Sniffer Bridge
   const handleLiveNetworkPacket = useCallback(
     (rawPkt) => {
@@ -636,6 +649,23 @@ export default function App() {
       // Filter out internal localhost loopback development noise
       if (rawPkt.srcIp === '127.0.0.1' || rawPkt.dstIp === '127.0.0.1' || rawPkt.srcIp === rawPkt.dstIp) return;
 
+      // Queue up incoming live packets for smooth sequential dispatch
+      packetQueueRef.current.push(rawPkt);
+      if (packetQueueRef.current.length > 50) {
+        packetQueueRef.current.shift();
+      }
+    },
+    []
+  );
+
+  // Sequential dispatcher for queued bridge packets
+  useEffect(() => {
+    if (!isLoggedIn || isTerminalPaused) return;
+
+    const queueTimer = setInterval(() => {
+      if (packetQueueRef.current.length === 0) return;
+
+      const rawPkt = packetQueueRef.current.shift();
       const { action, matchedRule } = evaluatePacketAgainstRules(
         rawPkt.srcIp,
         rawPkt.dstIp || '192.168.1.1',
@@ -666,17 +696,11 @@ export default function App() {
       }
 
       inspectPacketForThreats(pkt);
+      setLogs((prev) => [...prev.slice(-79), pkt]);
+    }, 500);
 
-      setLogs((prev) => [...prev.slice(-60), pkt]);
-
-      setThroughput((prev) => {
-        const delta = (pkt.len * 8) / (1024 * 1024);
-        return parseFloat((prev * 0.85 + delta * 3.0).toFixed(2));
-      });
-      setPacketRate((prev) => Math.min(260000, Math.floor(prev * 0.95 + 2200)));
-    },
-    [evaluatePacketAgainstRules, recordPacketHit, inspectPacketForThreats]
-  );
+    return () => clearInterval(queueTimer);
+  }, [isLoggedIn, isTerminalPaused, evaluatePacketAgainstRules, recordPacketHit, inspectPacketForThreats]);
 
   // Connect to SSE Live Packet Stream when in 'live' Network Mode
   useEffect(() => {
@@ -735,27 +759,42 @@ export default function App() {
     setIsAiAnalystOpen(true);
   }, []);
 
-  // Terminal Live Stream loop - Only transmits simulated frames when an attack vector is explicitly triggered
+  // Terminal Live Stream loop - Continuous natural one-by-one packet stream
   useEffect(() => {
-    if (!isLoggedIn || isTerminalPaused || !isAttackActive) return;
+    if (!isLoggedIn || isTerminalPaused) return;
 
-    let intervalMs = 600;
-    if (activeScenario?.intensity === 'aggressive') {
-      intervalMs = 400;
-    } else if (activeScenario?.intensity === 'moderate') {
-      intervalMs = 850;
+    // Normal baseline: smooth natural flow (1200ms per frame)
+    // Attack mode: rapid high-velocity flood (350ms - 500ms)
+    let intervalMs = 1200;
+    if (isAttackActive) {
+      if (activeScenario?.intensity === 'aggressive') {
+        intervalMs = 350;
+      } else if (activeScenario?.intensity === 'moderate') {
+        intervalMs = 750;
+      } else {
+        intervalMs = 500;
+      }
     }
 
     const interval = setInterval(() => {
+      // In live network mode without active attack, if backend socket queue has items, let the queue handle it
+      if (trafficMode === 'live' && !isAttackActive && packetQueueRef.current.length > 0) {
+        return;
+      }
+
       const newPkt = generatePacket();
-      setLogs((prev) => [...prev.slice(-60), newPkt]);
+      setLogs((prev) => [...prev.slice(-79), newPkt]);
       recordPacketHit(newPkt.rule, newPkt.len);
-      api.recordLog(newPkt);
       inspectPacketForThreats(newPkt);
+
+      // Persist to backend database: all attack packets or sampled baseline packets
+      if (isAttackActive || Math.random() > 0.65) {
+        api.recordLog(newPkt);
+      }
     }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [isLoggedIn, isTerminalPaused, isAttackActive, activeScenario, generatePacket, recordPacketHit, inspectPacketForThreats]);
+  }, [isLoggedIn, isTerminalPaused, isAttackActive, activeScenario, trafficMode, generatePacket, recordPacketHit, inspectPacketForThreats]);
 
   // Auto-scroll inside terminal container ONLY
   useEffect(() => {
